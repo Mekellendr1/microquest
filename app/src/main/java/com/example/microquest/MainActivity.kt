@@ -1,10 +1,15 @@
 package com.example.microquest
 
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.foundation.background
 import androidx.compose.foundation.Canvas
 import android.Manifest
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -15,7 +20,6 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -24,10 +28,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -37,6 +41,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.example.microquest.data.CompletedQuest
 import com.example.microquest.data.QuestType
 import com.example.microquest.ui.theme.MicroQuestTheme
@@ -44,41 +49,102 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  Activity
-// ─────────────────────────────────────────────────────────────────────────────
-
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent {
-            MicroQuestTheme {
-                MicroQuestApp()
-            }
-        }
+        setContent { MicroQuestTheme { MicroQuestApp() } }
     }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-//  Root composable
-// ─────────────────────────────────────────────────────────────────────────────
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MicroQuestApp(vm: QuestViewModel = viewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
+    val currentState by rememberUpdatedState(state)
     val context = LocalContext.current
 
-    // ── Camera / Gallery helpers ─────────────────────────────────────────
+    // ── Camera / Gallery ─────────────────────────────────────────────────
     var tempPhotoUri by remember { mutableStateOf<Uri?>(null) }
+    var isCameraOpen by remember { mutableStateOf(false) }
+    var isVideoCameraOpen by remember { mutableStateOf(false) }
 
     val cameraLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.TakePicture()
-    ) { success -> if (success) vm.onPhotoPicked(tempPhotoUri) }
+    ) { success ->
+        isCameraOpen = false
+        if (success) {
+            vm.onPhotoPicked(tempPhotoUri)
+        } else {
+            if (currentState.timerSeconds == 0 && !currentState.timerRunning) {
+                Toast.makeText(context, "⏰ Время вышло! Квест пропущен", Toast.LENGTH_SHORT).show()
+                vm.skipCurrentQuest()
+            }
+        }
+    }
 
     val galleryLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri -> vm.onPhotoPicked(uri) }
+
+    val cameraPermission = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            val file = File.createTempFile("quest_", ".jpg", context.cacheDir)
+            tempPhotoUri = FileProvider.getUriForFile(
+                context, "${context.packageName}.fileprovider", file
+            )
+            cameraLauncher.launch(tempPhotoUri!!)
+        }
+    }
+    // ── Video recorder ───────────────────────────────────────────────────
+    var tempVideoUri by remember { mutableStateOf<Uri?>(null) }
+
+    val videoLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CaptureVideo()
+    ) { success ->
+        isVideoCameraOpen = false
+        if (success && !currentState.timedOut) {
+            vm.onVideoPicked(tempVideoUri)
+        } else {
+            Toast.makeText(context, "⏰ Время вышло! Квест пропущен", Toast.LENGTH_SHORT).show()
+            vm.skipCurrentQuest()
+        }
+    }
+
+    val videoGalleryLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri -> vm.onVideoPicked(uri) }
+
+    fun launchVideoCamera() {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
+            == PackageManager.PERMISSION_GRANTED
+        ) {
+            val file = File.createTempFile("quest_video_", ".mp4", context.cacheDir)
+            tempVideoUri = FileProvider.getUriForFile(
+                context, "${context.packageName}.fileprovider", file
+            )
+            isVideoCameraOpen = true   // ← добавь
+            videoLauncher.launch(tempVideoUri!!)
+        } else {
+            cameraPermission.launch(Manifest.permission.CAMERA)
+        }
+    }
+    fun launchCamera() {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
+            == PackageManager.PERMISSION_GRANTED
+        ) {
+            val file = File.createTempFile("quest_", ".jpg", context.cacheDir)
+            tempPhotoUri = FileProvider.getUriForFile(
+                context, "${context.packageName}.fileprovider", file
+            )
+            isCameraOpen = true   // ← добавь
+            cameraLauncher.launch(tempPhotoUri!!)
+        } else {
+            cameraPermission.launch(Manifest.permission.CAMERA)
+        }
+    }
+
     // ── Voice recorder ───────────────────────────────────────────────────
     var isRecording by remember { mutableStateOf(false) }
     var mediaRecorder by remember { mutableStateOf<android.media.MediaRecorder?>(null) }
@@ -102,63 +168,9 @@ fun MicroQuestApp(vm: QuestViewModel = viewModel()) {
             isRecording = true
         }
     }
-    // ── Media player для прослушивания голосовых ─────────────────────────
-    var mediaPlayer by remember { mutableStateOf<android.media.MediaPlayer?>(null) }
-    var playingUri by remember { mutableStateOf<Uri?>(null) }
-
-    fun playVoice(uri: Uri) {
-        if (playingUri == uri) {
-            mediaPlayer?.apply { stop(); release() }
-            mediaPlayer = null
-            playingUri = null
-            return
-        }
-        mediaPlayer?.apply { stop(); release() }
-        mediaPlayer = null
-        playingUri = uri
-
-        try {
-            val afd = context.contentResolver.openFileDescriptor(uri, "r") ?: return
-            val player = android.media.MediaPlayer()
-            player.setDataSource(afd.fileDescriptor)
-            afd.close()
-
-            player.setOnPreparedListener { mp ->
-                mp.start()
-            }
-            player.setOnCompletionListener { mp ->
-                mp.release()
-                mediaPlayer = null
-                playingUri = null
-            }
-            player.setOnErrorListener { mp, what, extra ->
-                android.util.Log.e("MicroQuest", "MediaPlayer error: what=$what extra=$extra")
-                mp.release()
-                mediaPlayer = null
-                playingUri = null
-                true
-            }
-
-            player.prepareAsync()   // ← асинхронно, не блокирует UI поток
-            mediaPlayer = player
-
-        } catch (e: Exception) {
-            android.util.Log.e("MicroQuest", "playVoice crashed: ${e.message}", e)
-            mediaPlayer = null
-            playingUri = null
-        }
-    }
-
-// Освобождаем при уходе с экрана
-    DisposableEffect(Unit) {
-        onDispose {
-            mediaPlayer?.apply { stop(); release() }
-        }
-    }
 
     fun toggleRecording() {
         if (isRecording) {
-            // Стоп
             mediaRecorder?.apply { stop(); release() }
             mediaRecorder = null
             isRecording = false
@@ -169,7 +181,6 @@ fun MicroQuestApp(vm: QuestViewModel = viewModel()) {
                 vm.onVoicePicked(uri)
             }
         } else {
-            // Старт
             if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO)
                 == PackageManager.PERMISSION_GRANTED
             ) {
@@ -190,43 +201,88 @@ fun MicroQuestApp(vm: QuestViewModel = viewModel()) {
             }
         }
     }
-    val cameraPermission = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { granted ->
-        if (granted) {
-            val file = File.createTempFile("quest_", ".jpg", context.cacheDir)
-            tempPhotoUri = FileProvider.getUriForFile(
-                context, "${context.packageName}.fileprovider", file
-            )
-            cameraLauncher.launch(tempPhotoUri!!)
+
+    // ── Media player ─────────────────────────────────────────────────────
+    var mediaPlayer by remember { mutableStateOf<android.media.MediaPlayer?>(null) }
+    var playingUri by remember { mutableStateOf<Uri?>(null) }
+    var isPaused by remember { mutableStateOf(false) }
+
+    DisposableEffect(Unit) {
+        onDispose { mediaPlayer?.apply { stop(); release() } }
+    }
+
+    fun stopPlayer() {
+        mediaPlayer?.apply { stop(); release() }
+        mediaPlayer = null
+        playingUri = null
+        isPaused = false
+    }
+
+    fun playVoice(uri: Uri) {
+        if (playingUri == uri && mediaPlayer != null) {
+            if (isPaused) { mediaPlayer?.start(); isPaused = false }
+            else { mediaPlayer?.pause(); isPaused = true }
+            return
+        }
+        stopPlayer()
+        playingUri = uri
+        try {
+            val afd = context.contentResolver.openFileDescriptor(uri, "r") ?: return
+            val player = android.media.MediaPlayer()
+            player.setDataSource(afd.fileDescriptor)
+            afd.close()
+            player.setOnPreparedListener { it.start() }
+            player.setOnCompletionListener {
+                it.release(); mediaPlayer = null; playingUri = null; isPaused = false
+            }
+            player.setOnErrorListener { mp, what, extra ->
+                android.util.Log.e("MicroQuest", "MediaPlayer error: what=$what extra=$extra")
+                mp.release(); mediaPlayer = null; playingUri = null; isPaused = false; true
+            }
+            player.prepareAsync()
+            mediaPlayer = player
+        } catch (e: Exception) {
+            android.util.Log.e("MicroQuest", "playVoice crashed: ${e.message}", e)
+            mediaPlayer = null; playingUri = null
         }
     }
 
-    fun launchCamera() {
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
-            == PackageManager.PERMISSION_GRANTED
-        ) {
-            val file = File.createTempFile("quest_", ".jpg", context.cacheDir)
-            tempPhotoUri = FileProvider.getUriForFile(
-                context, "${context.packageName}.fileprovider", file
-            )
-            cameraLauncher.launch(tempPhotoUri!!)
-        } else {
-            cameraPermission.launch(Manifest.permission.CAMERA)
+    // ── FIX 4: автозапуск таймера при смене квеста ───────────────────────
+    LaunchedEffect(state.currentQuest?.id) {
+        if (state.currentQuest != null) vm.startTimer()
+    }
+    LaunchedEffect(state.timerSeconds, state.timerRunning) {
+        if (state.timerSeconds == 0 && !state.timerRunning && state.currentQuest != null) {
+            val quest = state.currentQuest!!
+            when (quest.type) {
+                QuestType.ACTION -> if (state.pendingVideoUri == null) {
+                    vm.markTimedOut()  // ← помечаем что время вышло
+                    if (!isVideoCameraOpen) {
+                        Toast.makeText(context, "⏰ Время вышло! Квест пропущен", Toast.LENGTH_SHORT).show()
+                        vm.skipCurrentQuest()
+                    }
+                    // если камера открыта — скип произойдёт в videoLauncher
+                }
+                QuestType.TEXT -> if (state.pendingAnswer.isBlank() && !isCameraOpen) {
+                    Toast.makeText(context, "⏰ Время вышло! Квест пропущен", Toast.LENGTH_SHORT).show()
+                    vm.skipCurrentQuest()
+                }
+                QuestType.PHOTO -> if (!isCameraOpen) {
+                    Toast.makeText(context, "⏰ Время вышло! Квест пропущен", Toast.LENGTH_SHORT).show()
+                    vm.skipCurrentQuest()
+                }
+                QuestType.VOICE -> if (state.pendingVoiceUri == null) {
+                    Toast.makeText(context, "⏰ Время вышло! Квест пропущен", Toast.LENGTH_SHORT).show()
+                    vm.skipCurrentQuest()
+                }
+            }
         }
     }
 
-    // ── Scaffold ─────────────────────────────────────────────────────────
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {
-                    Text(
-                        "⚡ Micro Quest",
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 22.sp
-                    )
-                },
+                title = { Text("⚡ Micro Quest", fontWeight = FontWeight.ExtraBold, fontSize = 22.sp) },
                 actions = {
                     Badge(containerColor = MaterialTheme.colorScheme.primary) {
                         Text(
@@ -254,7 +310,6 @@ fun MicroQuestApp(vm: QuestViewModel = viewModel()) {
             verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(vertical = 20.dp)
         ) {
-            // ── Current quest card ────────────────────────────────────
             item {
                 AnimatedContent(
                     targetState = state.currentQuest,
@@ -272,7 +327,6 @@ fun MicroQuestApp(vm: QuestViewModel = viewModel()) {
                             timerSeconds = state.timerSeconds,
                             timerRunning = state.timerRunning,
                             pendingPhotoUri = state.pendingPhotoUri,
-                            onStart = { vm.startTimer() },
                             onComplete = { vm.completeCurrentQuest(state.pendingPhotoUri) },
                             onSkip = { vm.skipCurrentQuest() },
                             onLaunchCamera = { launchCamera() },
@@ -282,12 +336,14 @@ fun MicroQuestApp(vm: QuestViewModel = viewModel()) {
                             pendingVoiceUri = state.pendingVoiceUri,
                             isRecording = isRecording,
                             onToggleRecording = { toggleRecording() },
-                        )
+                            pendingVideoUri = state.pendingVideoUri,
+                            onLaunchVideoCamera = { launchVideoCamera() },
+                            onOpenVideoGallery = { videoGalleryLauncher.launch("video/*") },
+
+                            )
                     }
                 }
             }
-
-            // ── History header ────────────────────────────────────────
 
             if (state.history.isNotEmpty()) {
                 item {
@@ -301,7 +357,10 @@ fun MicroQuestApp(vm: QuestViewModel = viewModel()) {
                 items(state.history, key = { it.rowId }) { item ->
                     HistoryItem(
                         item = item,
-                        onPlayVoice = { uri -> playVoice(uri) }
+                        playingUri = playingUri,
+                        isPaused = isPaused,
+                        onPlayVoice = { uri -> playVoice(uri) },
+                        onStopVoice = { stopPlayer() }
                     )
                 }
             }
@@ -319,7 +378,6 @@ fun QuestCard(
     timerSeconds: Int,
     timerRunning: Boolean,
     pendingPhotoUri: Uri?,
-    onStart: () -> Unit,
     onComplete: () -> Unit,
     onSkip: () -> Unit,
     onLaunchCamera: () -> Unit,
@@ -329,6 +387,10 @@ fun QuestCard(
     pendingVoiceUri: Uri?,
     isRecording: Boolean,
     onToggleRecording: () -> Unit,
+    pendingVideoUri: Uri?,
+    onLaunchVideoCamera: () -> Unit,
+    onOpenVideoGallery: () -> Unit,
+
 ) {
     val typeColor = when (quest.type) {
         QuestType.ACTION -> MaterialTheme.colorScheme.tertiary
@@ -337,16 +399,22 @@ fun QuestCard(
         QuestType.VOICE  -> MaterialTheme.colorScheme.error
     }
     val typeIcon = when (quest.type) {
-        QuestType.ACTION -> "🏃"
-        QuestType.TEXT   -> "✏️"
-        QuestType.PHOTO  -> "📷"
-        QuestType.VOICE  -> "🎙️"
+        QuestType.ACTION -> "🏃"; QuestType.TEXT -> "✏️"
+        QuestType.PHOTO  -> "📷"; QuestType.VOICE -> "🎙️"
     }
     val typeLabel = when (quest.type) {
-        QuestType.ACTION -> "Действие"
-        QuestType.TEXT   -> "Текст"
-        QuestType.PHOTO  -> "Фото"
-        QuestType.VOICE  -> "Голос"
+        QuestType.ACTION -> "Действие"; QuestType.TEXT -> "Текст"
+        QuestType.PHOTO  -> "Фото";    QuestType.VOICE -> "Голос"
+    }
+
+    // FIX 2: ACTION разрешена досрочно (пока таймер идёт или истёк)
+    // FIX 5: TEXT требует непустой trim
+    val timerDone = !timerRunning && timerSeconds == 0
+    val canComplete = when (quest.type) {
+        QuestType.ACTION -> (timerRunning || timerDone) && pendingVideoUri != null
+        QuestType.TEXT -> (timerRunning || timerDone) && pendingAnswer.trim().isNotBlank()
+        QuestType.PHOTO -> (timerRunning || timerDone) && pendingPhotoUri != null
+        QuestType.VOICE -> (timerRunning || timerDone) && pendingVoiceUri != null
     }
 
     ElevatedCard(
@@ -358,23 +426,14 @@ fun QuestCard(
             modifier = Modifier.padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Type badge
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Surface(
-                    shape = RoundedCornerShape(50),
-                    color = typeColor.copy(alpha = 0.15f)
-                ) {
-                    Text(
-                        "$typeIcon  $typeLabel",
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-                        color = typeColor,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 13.sp
-                    )
-                }
+            Surface(shape = RoundedCornerShape(50), color = typeColor.copy(alpha = 0.15f)) {
+                Text(
+                    "$typeIcon  $typeLabel",
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                    color = typeColor, fontWeight = FontWeight.SemiBold, fontSize = 13.sp
+                )
             }
 
-            // Quest text
             Text(
                 text = quest.text,
                 style = MaterialTheme.typography.headlineSmall,
@@ -382,7 +441,6 @@ fun QuestCard(
                 lineHeight = 32.sp
             )
 
-            // Timer ring
             TimerRing(
                 totalSeconds = quest.durationSeconds,
                 remainingSeconds = timerSeconds,
@@ -399,40 +457,62 @@ fun QuestCard(
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 2,
                     maxLines = 4,
-                    shape = RoundedCornerShape(16.dp)
+                    shape = RoundedCornerShape(16.dp),
+                    enabled = true
                 )
             }
-            // Start / running hint
-            if (!timerRunning) {
-                OutlinedButton(
-                    onClick = onStart,
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                ) { Text("▶ Запустить таймер") }
-            }
 
-            // Photo quest extras
-            if (quest.type == QuestType.PHOTO) {
+            if (quest.type == QuestType.ACTION) {
+                Text(
+                    "🎬 Сними видео-пруф",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    OutlinedButton(
-                        onClick = onLaunchCamera,
-                        modifier = Modifier.weight(1f)
-                    ) { Text("📷 Камера") }
-                    OutlinedButton(
-                        onClick = onOpenGallery,
-                        modifier = Modifier.weight(1f)
-                    ) { Text("🖼 Галерея") }
+                    OutlinedButton(onClick = onLaunchVideoCamera, modifier = Modifier.weight(1f)) {
+                        Text("🎥 Камера")
+                    }
+                    OutlinedButton(onClick = onOpenVideoGallery, modifier = Modifier.weight(1f)) {
+                        Text("🎞 Галерея")
+                    }
                 }
-                if (pendingPhotoUri != null) {
+                if (pendingVideoUri != null) {
                     Text(
-                        "✅ Фото выбрано",
+                        "✅ Видео выбрано",
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.SemiBold
                     )
                 }
             }
+
+            if (quest.type == QuestType.PHOTO) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    OutlinedButton(onClick = onLaunchCamera, modifier = Modifier.weight(1f)) {
+                        Text("📷 Камера")
+                    }
+                    OutlinedButton(onClick = onOpenGallery, modifier = Modifier.weight(1f)) {
+                        Text("🖼 Галерея")
+                    }
+                }
+                if (pendingPhotoUri != null) {
+                    AsyncImage(
+                        model = pendingPhotoUri,
+                        contentDescription = "Фото квеста",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentHeight()
+                            .clip(RoundedCornerShape(16.dp)),
+                        contentScale = ContentScale.FillWidth  // ← подстраивается под ширину экрана
+                    )
+                }
+            }
+
             if (quest.type == QuestType.VOICE) {
                 Button(
                     onClick = onToggleRecording,
@@ -461,22 +541,17 @@ fun QuestCard(
                 }
             }
 
-            // Action buttons
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                OutlinedButton(
-                    onClick = onSkip,
-                    modifier = Modifier.weight(1f)
-                ) { Text("⏭ Пропустить") }
+                OutlinedButton(onClick = onSkip, modifier = Modifier.weight(1f)) {
+                    Text("⏭ Пропустить")
+                }
                 Button(
                     onClick = onComplete,
                     modifier = Modifier.weight(1f),
-                    enabled = !timerRunning && timerSeconds == 0 &&
-                            (quest.type != QuestType.PHOTO || pendingPhotoUri != null) &&
-                            (quest.type != QuestType.TEXT  || pendingAnswer.isNotBlank()) &&
-                            (quest.type != QuestType.VOICE || pendingVoiceUri != null)
+                    enabled = canComplete
                 ) { Text("✅ Выполнено") }
             }
         }
@@ -501,35 +576,18 @@ fun TimerRing(
         animationSpec = tween(800, easing = LinearEasing),
         label = "timer"
     )
-
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = modifier.size(100.dp)
-    ) {
+    Box(contentAlignment = Alignment.Center, modifier = modifier.size(100.dp)) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             val stroke = Stroke(width = 10f, cap = StrokeCap.Round)
-            drawArc(
-                color = color.copy(alpha = 0.15f),
-                startAngle = -90f,
-                sweepAngle = 360f,
-                useCenter = false,
-                style = stroke
-            )
-            drawArc(
-                color = color,
-                startAngle = -90f,
-                sweepAngle = 360f * animatedFraction,
-                useCenter = false,
-                style = stroke
-            )
+            drawArc(color = color.copy(alpha = 0.15f), startAngle = -90f, sweepAngle = 360f, useCenter = false, style = stroke)
+            drawArc(color = color, startAngle = -90f, sweepAngle = 360f * animatedFraction, useCenter = false, style = stroke)
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = "$remainingSeconds",
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.ExtraBold,
-                color = if (remainingSeconds <= 5 && running)
-                    MaterialTheme.colorScheme.error else color
+                color = if (remainingSeconds <= 5 && running) MaterialTheme.colorScheme.error else color
             )
             Text("сек", style = MaterialTheme.typography.labelSmall)
         }
@@ -542,30 +600,15 @@ fun TimerRing(
 
 @Composable
 fun AllDoneCard(onReset: () -> Unit) {
-    ElevatedCard(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp)
-    ) {
+    ElevatedCard(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(24.dp)) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(32.dp),
+            modifier = Modifier.fillMaxWidth().padding(32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text("🏆", fontSize = 64.sp)
-            Text(
-                "Все квесты пройдены!",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.ExtraBold,
-                textAlign = TextAlign.Center
-            )
-            Text(
-                "Ты настоящий герой микро-приключений.",
-                style = MaterialTheme.typography.bodyMedium,
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Text("Все квесты пройдены!", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.ExtraBold, textAlign = TextAlign.Center)
+            Text("Ты настоящий герой микро-приключений.", style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Button(onClick = onReset) { Text("🔄 Начать заново") }
         }
     }
@@ -574,80 +617,179 @@ fun AllDoneCard(onReset: () -> Unit) {
 // ─────────────────────────────────────────────────────────────────────────────
 //  History item
 // ─────────────────────────────────────────────────────────────────────────────
-
 @Composable
-fun HistoryItem(item: CompletedQuest, onPlayVoice: (Uri) -> Unit) {
+fun VideoPlayerDialog(uri: Uri, onDismiss: () -> Unit) {
+    val context = LocalContext.current
+
+    val exoPlayer = remember(uri) {
+        androidx.media3.exoplayer.ExoPlayer.Builder(context).build().apply {
+            setMediaItem(androidx.media3.common.MediaItem.fromUri(uri))
+            prepare()
+            playWhenReady = true
+        }
+    }
+
+    DisposableEffect(uri) {
+        onDispose { exoPlayer.release() }
+    }
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            dismissOnClickOutside = true
+        )
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black)
+        ) {
+            AndroidView(
+                factory = {
+                    androidx.media3.ui.PlayerView(it).apply {
+                        player = exoPlayer
+                        useController = true
+                        setFullscreenButtonClickListener { }
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.Center)
+            )
+
+            IconButton(
+                onClick = onDismiss,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(8.dp)
+            ) {
+                Icon(
+                    Icons.Default.Close,
+                    contentDescription = "Закрыть",
+                    tint = Color.White,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+        }
+    }
+}
+@Composable
+fun HistoryItem(
+    item: CompletedQuest,
+    playingUri: Uri?,
+    isPaused: Boolean,
+    onPlayVoice: (Uri) -> Unit,
+    onStopVoice: () -> Unit,
+) {
     val fmt = remember { SimpleDateFormat("dd MMM, HH:mm", Locale("ru")) }
-    val dateStr = remember(item.completedAt) {
-        fmt.format(Date(item.completedAt * 1000))
-    }
+    val dateStr = remember(item.completedAt) { fmt.format(Date(item.completedAt * 1000)) }
     val icon = when (item.questType) {
-        "PHOTO" -> "📷"
-        "TEXT"  -> "✏️"
-        "VOICE" -> "🎙️"
-        else    -> "🏃"
+        "PHOTO" -> "📷"; "TEXT" -> "✏️"; "VOICE" -> "🎙️"; else -> "🏃"
     }
+    val context = LocalContext.current
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-        ),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
         shape = RoundedCornerShape(16.dp)
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.Top
-        ) {
-            Text(icon, fontSize = 24.sp)
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.Top
             ) {
-                Text(
-                    item.questText,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium,
-                    maxLines = 2
+                Text(icon, fontSize = 24.sp)
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(item.questText, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, maxLines = 2)
+                    if (!item.userAnswer.isNullOrBlank()) {
+                        Text(
+                            "💬 ${item.userAnswer}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.secondary,
+                            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                        )
+                    }
+                    Text(dateStr, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+            }
+
+            // Фото — подстраивается под экран
+            if (!item.photoUri.isNullOrBlank()) {
+                AsyncImage(
+                    model = Uri.parse(item.photoUri),
+                    contentDescription = "Фото из квеста",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight()
+                        .clip(RoundedCornerShape(12.dp)),
+                    contentScale = ContentScale.FillWidth
                 )
-                if (!item.userAnswer.isNullOrBlank()) {
-                    Text(
-                        "💬 ${item.userAnswer}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.secondary,
-                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+            }
+
+            // Видео — ExoPlayer
+            // Видео — открывается в диалоге
+            if (!item.videoUri.isNullOrBlank()) {
+                val videoUri = Uri.parse(item.videoUri)
+                var showVideoDialog by remember { mutableStateOf(false) }
+
+                OutlinedButton(
+                    onClick = { showVideoDialog = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.Videocam, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("▶ Смотреть видео-пруф")
+                }
+
+                if (showVideoDialog) {
+                    VideoPlayerDialog(
+                        uri = videoUri,
+                        onDismiss = { showVideoDialog = false }
                     )
                 }
-                // Кнопка воспроизведения голосовой
-                if (!item.voiceUri.isNullOrBlank()) {
-                    val uri = Uri.parse(item.voiceUri)
+            }
+
+            // Голосовой плеер
+            if (!item.voiceUri.isNullOrBlank()) {
+                val uri = Uri.parse(item.voiceUri)
+                val isThisPlaying = playingUri == uri
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     OutlinedButton(
                         onClick = { onPlayVoice(uri) },
                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-                        modifier = Modifier.height(32.dp)
+                        modifier = Modifier.height(36.dp)
                     ) {
                         Icon(
-                            Icons.Default.PlayArrow,
+                            imageVector = if (isThisPlaying && !isPaused) Icons.Default.PauseCircle else Icons.Default.PlayArrow,
                             contentDescription = null,
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(Modifier.width(4.dp))
-                        Text("Слушать", fontSize = 12.sp)
+                        Text(
+                            when {
+                                isThisPlaying && !isPaused -> "Пауза"
+                                isThisPlaying && isPaused  -> "Продолжить"
+                                else -> "Слушать"
+                            },
+                            fontSize = 12.sp
+                        )
+                    }
+                    if (isThisPlaying) {
+                        OutlinedButton(
+                            onClick = onStopVoice,
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                            modifier = Modifier.height(36.dp)
+                        ) {
+                            Icon(Icons.Default.StopCircle, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text("Стоп", fontSize = 12.sp)
+                        }
                     }
                 }
-                Text(
-                    dateStr,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
             }
-            Icon(
-                Icons.Default.CheckCircle,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(20.dp)
-            )
         }
     }
+
 }

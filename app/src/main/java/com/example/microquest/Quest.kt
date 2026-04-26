@@ -36,7 +36,8 @@ data class CompletedQuest(
     val completedAt: Long = Instant.now().epochSecond,
     val photoUri: String? = null, // only for PHOTO quests
     val userAnswer: String? = null,
-    val voiceUri: String? = null
+    val voiceUri: String? = null,
+    val videoUri: String? = null
 )
 
 // ─────────────────────────────────────────
@@ -81,7 +82,7 @@ interface CompletedQuestDao {
 
 @Database(
     entities = [CompletedQuest::class],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -99,6 +100,11 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL("ALTER TABLE completed_quests ADD COLUMN voiceUri TEXT")
             }
         }
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE completed_quests ADD COLUMN videoUri TEXT")
+            }
+        }
         @Volatile private var INSTANCE: AppDatabase? = null
 
         fun getInstance(context: android.content.Context): AppDatabase =
@@ -107,7 +113,7 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "micro_quest.db"
-                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                     .build().also { INSTANCE = it }
             }
     }

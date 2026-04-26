@@ -25,7 +25,9 @@ data class QuestUiState(
     val pendingPhotoUri: Uri? = null,
     val pendingAnswer: String = "",
     val pendingVoiceUri: Uri? = null,
-    val playingVoiceUri: Uri? = null
+    val playingVoiceUri: Uri? = null,
+    val pendingVideoUri: Uri? = null,
+    val timedOut: Boolean = false
 ){
 
 }
@@ -69,6 +71,7 @@ class QuestViewModel(application: Application) : AndroidViewModel(application) {
         val quest = _state.value.currentQuest ?: return
         val answer = _state.value.pendingAnswer.trim().takeIf { it.isNotEmpty() }
         val voiceUri = _state.value.pendingVoiceUri
+        val videoUri = _state.value.pendingVideoUri
         viewModelScope.launch {
             dao.insert(
                 CompletedQuest(
@@ -77,7 +80,8 @@ class QuestViewModel(application: Application) : AndroidViewModel(application) {
                     questType = quest.type.name,
                     photoUri = photoUri?.toString(),
                     userAnswer = answer,
-                    voiceUri = voiceUri?.toString()
+                    voiceUri = voiceUri?.toString(),
+                    videoUri = videoUri?.toString()
                 )
             )
             loadNextQuest()
@@ -131,7 +135,9 @@ class QuestViewModel(application: Application) : AndroidViewModel(application) {
                     timerSeconds = next?.durationSeconds ?: 30,
                     pendingPhotoUri = null,
                     pendingAnswer = "",
-                    pendingVoiceUri = null
+                    pendingVoiceUri = null,
+                    pendingVideoUri = null,
+                    timedOut = false
                 )
             }
         }
@@ -144,5 +150,11 @@ class QuestViewModel(application: Application) : AndroidViewModel(application) {
     }
     fun setPlayingVoice(uri: Uri?) {
         _state.update { it.copy(playingVoiceUri = uri) }
+    }
+    fun onVideoPicked(uri: Uri?) {
+        _state.update { it.copy(pendingVideoUri = uri) }
+    }
+    fun markTimedOut() {
+        _state.update { it.copy(timedOut = true) }
     }
 }
