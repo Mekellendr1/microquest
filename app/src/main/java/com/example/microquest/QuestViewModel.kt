@@ -2,9 +2,12 @@ package com.example.microquest
 
 import android.app.Application
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.microquest.data.*
+import com.example.microquest.network.ApiClient
+import com.example.microquest.network.SyncQuestRequest
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
@@ -39,6 +42,7 @@ data class QuestUiState(
 class QuestViewModel(application: Application) : AndroidViewModel(application) {
 
     private val dao = AppDatabase.getInstance(application).completedQuestDao()
+    private val api = ApiClient.get(application.applicationContext)
 
     // ── Internal mutable state ───────────────────────────────────────────
     private val _state = MutableStateFlow(QuestUiState())
@@ -73,17 +77,34 @@ class QuestViewModel(application: Application) : AndroidViewModel(application) {
         val voiceUri = _state.value.pendingVoiceUri
         val videoUri = _state.value.pendingVideoUri
         viewModelScope.launch {
+            val completedAt = System.currentTimeMillis() / 1000
             dao.insert(
                 CompletedQuest(
                     questId = quest.id,
                     questText = quest.text,
                     questType = quest.type.name,
+                    completedAt = completedAt,
                     photoUri = photoUri?.toString(),
                     userAnswer = answer,
                     voiceUri = voiceUri?.toString(),
                     videoUri = videoUri?.toString()
                 )
             )
+            // Sync to server silently (doesn't block the UI)
+            launch {
+                try {
+                    api.syncQuest(
+                        SyncQuestRequest(
+                            questId     = quest.id,
+                            questText   = quest.text,
+                            questType   = quest.type.name,
+                            completedAt = completedAt
+                        )
+                    )
+                } catch (e: Exception) {
+                    Log.w("QuestVM", "Server sync failed (offline?): ${e.message}")
+                }
+            }
             loadNextQuest()
         }
     }
