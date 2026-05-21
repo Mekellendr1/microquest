@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Allow HTTP to emulator localhost (10.0.2.2) and LAN during development -->
+    <!-- DEV: разрешаем HTTP для любого хоста (эмулятор, телефон в LAN) -->
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system"/>
+        </trust-anchors>
+    </base-config>
+</network-security-config>
