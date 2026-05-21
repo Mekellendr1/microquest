@@ -50,6 +50,8 @@ import com.example.microquest.auth.LoginScreen
 import com.example.microquest.auth.RegisterScreen
 import com.example.microquest.data.CompletedQuest
 import com.example.microquest.data.QuestType
+import com.example.microquest.friends.FriendsScreen
+import com.example.microquest.friends.FriendsViewModel
 import com.example.microquest.profile.ProfileScreen
 import com.example.microquest.ui.theme.MicroQuestTheme
 import java.io.File
@@ -91,11 +93,19 @@ fun AppRoot() {
             )
         }
         composable("main") {
-            MicroQuestApp(authVm = authVm, onOpenProfile = { nav.navigate("profile") })
+            MicroQuestApp(
+                authVm = authVm,
+                onOpenProfile = { nav.navigate("profile") },
+                onOpenFriends = { nav.navigate("friends") }
+            )
         }
         composable("profile") {
             ProfileScreen(vm = authVm, onBack = { nav.popBackStack() },
                 onLogout = { nav.navigate("login") { popUpTo("main") { inclusive = true } } })
+        }
+        composable("friends") {
+            val friendsVm = viewModel<FriendsViewModel>()
+            FriendsScreen(vm = friendsVm, onBack = { nav.popBackStack() })
         }
     }
 }
@@ -109,7 +119,8 @@ fun AppRoot() {
 fun MicroQuestApp(
     vm: QuestViewModel = viewModel(),
     authVm: AuthViewModel,
-    onOpenProfile: () -> Unit
+    onOpenProfile: () -> Unit,
+    onOpenFriends: () -> Unit = {}
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     val currentState by rememberUpdatedState(state)
@@ -248,6 +259,7 @@ fun MicroQuestApp(
                     }
                     Spacer(Modifier.width(8.dp))
                     if (authState.isLoggedIn) {
+                        IconButton(onClick = onOpenFriends) { Icon(Icons.Default.People, contentDescription = "Друзья") }
                         IconButton(onClick = onOpenProfile) { Icon(Icons.Default.Person, contentDescription = "Профиль") }
                     }
                     IconButton(onClick = { vm.resetAll() }) { Icon(Icons.Default.Refresh, contentDescription = "Сбросить") }

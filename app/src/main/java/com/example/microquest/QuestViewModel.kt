@@ -98,7 +98,8 @@ class QuestViewModel(application: Application) : AndroidViewModel(application) {
                             questId     = quest.id,
                             questText   = quest.text,
                             questType   = quest.type.name,
-                            completedAt = completedAt
+                            completedAt = completedAt,
+                            proofText   = answer  // text answer as proof description
                         )
                     )
                 } catch (e: Exception) {
