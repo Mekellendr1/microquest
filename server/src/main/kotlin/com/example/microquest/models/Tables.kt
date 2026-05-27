@@ -11,6 +11,7 @@ object Users : Table("users") {
     val xp           = integer("xp").default(0)
     val level        = integer("level").default(1)
     val createdAt    = long("created_at")
+    val fcmToken     = text("fcm_token").nullable()
 
     override val primaryKey = PrimaryKey(id)
 }
@@ -27,6 +28,19 @@ object ServerQuests : Table("server_quests") {
     val status      = varchar("status", 20).default("PENDING") // PENDING | VERIFIED | REJECTED
 
     override val primaryKey = PrimaryKey(id)
+}
+
+// ── Achievements ──────────────────────────────────────────────────────────────
+
+/** Tracks which achievements each user has unlocked. */
+object UserAchievements : Table("user_achievements") {
+    val id             = uuid("id").autoGenerate()
+    val userId         = uuid("user_id").references(Users.id)
+    val achievementKey = varchar("achievement_key", 50)
+    val unlockedAt     = long("unlocked_at")
+
+    override val primaryKey = PrimaryKey(id)
+    init { uniqueIndex(userId, achievementKey) } // unlock once per user
 }
 
 // ── Social ────────────────────────────────────────────────────────────────────

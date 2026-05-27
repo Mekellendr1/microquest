@@ -45,6 +45,15 @@ object FriendService {
             }
         }
 
+        // Check achievements for requester (first_friend etc.)
+        AchievementService.checkAndAward(requesterId)
+
+        // Notify receiver
+        val requesterName = transaction {
+            Users.selectAll().where { Users.id eq rId }.first()[Users.username]
+        }
+        NotificationService.notifyFriendRequest(tId.toString(), requesterName)
+
         val count = transaction {
             ServerQuests.selectAll().where { ServerQuests.userId eq tId }.count().toInt()
         }
@@ -65,6 +74,7 @@ object FriendService {
         val uid = UUID.fromString(userId)
         val fid = UUID.fromString(friendshipId)
 
+        var requesterId: String? = null
         transaction {
             val row = Friendships.selectAll()
                 .where { (Friendships.id eq fid) and (Friendships.receiverId eq uid) }
@@ -72,9 +82,21 @@ object FriendService {
                 ?: error("Запрос не найден")
             require(row[Friendships.status] == "PENDING") { "Запрос уже обработан" }
 
+            requesterId = row[Friendships.requesterId].toString()
             Friendships.update({ Friendships.id eq fid }) {
                 it[status] = if (accept) "ACCEPTED" else "DECLINED"
             }
+        }
+        if (accept) {
+            // Both sides may unlock friend achievements
+            AchievementService.checkAndAward(userId)
+            requesterId?.let { AchievementService.checkAndAward(it) }
+
+            // Notify requester
+            val acceptorName = transaction {
+                Users.selectAll().where { Users.id eq uid }.first()[Users.username]
+            }
+            requesterId?.let { NotificationService.notifyFriendAccepted(it, acceptorName) }
         }
     }
 
@@ -244,6 +266,31 @@ object FriendService {
                 ServerQuests.update({ ServerQuests.id eq quid }) {
                     it[status] = "VERIFIED"
                 }
+            }
+        }
+        // Check achievements for voter (first_vote) and quest owner (verified_quest)
+        AchievementService.checkAndAward(userId)
+        val questOwner = transaction {
+            ServerQuests.selectAll().where { ServerQuests.id eq quid }
+                .first()[ServerQuests.userId].toString()
+        }
+        AchievementService.checkAndAward(questOwner)
+
+        // Notify quest owner if just verified
+        if (req.approve) {
+            val questRow = transaction {
+                ServerQuests.selectAll().where { ServerQuests.id eq quid }.first()
+            }
+            if (questRow[ServerQuests.status] == "VERIFIED") {
+                val voterName = transaction {
+                    Users.selectAll().where { Users.id eq UUID.fromString(userId) }
+                        .first()[Users.username]
+                }
+                NotificationService.notifyQuestVerified(
+                    questOwner,
+                    voterName,
+                    questRow[ServerQuests.questText].take(40)
+                )
             }
         }
     }

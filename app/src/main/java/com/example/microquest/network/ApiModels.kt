@@ -20,7 +20,8 @@ data class UserDto(
     val xp: Int,
     val level: Int,
     val xpToNextLevel: Int,
-    val completedCount: Int
+    val completedCount: Int,
+    val achievements: List<AchievementDto> = emptyList()
 )
 
 data class AuthResponse(
@@ -38,6 +39,16 @@ data class SyncQuestRequest(
 
 data class UpdateProfileRequest(
     val displayName: String?
+)
+
+data class FcmTokenRequest(val token: String)
+
+data class AchievementDto(
+    val key: String,
+    val name: String,
+    val description: String,
+    val icon: String,
+    val unlockedAt: Long?   // null = locked
 )
 
 // ── Friends ───────────────────────────────────────────────────────────────────

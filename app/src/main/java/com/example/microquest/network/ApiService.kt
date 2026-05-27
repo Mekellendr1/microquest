@@ -46,4 +46,9 @@ interface ApiService {
 
     @POST("feed/vote")
     suspend fun vote(@Body request: VoteRequest): Map<String, String>
+
+    // ── Push notifications ────────────────────────────────────────────────────
+
+    @PUT("fcm-token")
+    suspend fun updateFcmToken(@Body request: FcmTokenRequest): Map<String, String>
 }

@@ -31,7 +31,8 @@ data class UserDto(
     val xp: Int,
     val level: Int,
     val xpToNextLevel: Int,
-    val completedCount: Int = 0
+    val completedCount: Int = 0,
+    val achievements: List<AchievementDto> = emptyList()
 )
 
 @Serializable
@@ -49,6 +50,20 @@ data class SyncQuestRequest(
     val questType: String,
     val completedAt: Long,
     val proofText: String? = null   // optional proof description
+)
+
+@Serializable
+data class FcmTokenRequest(val token: String)
+
+// ── Achievements ──────────────────────────────────────────────────────────────
+
+@Serializable
+data class AchievementDto(
+    val key: String,
+    val name: String,
+    val description: String,
+    val icon: String,
+    val unlockedAt: Long?   // null = locked
 )
 
 // ── Friends ───────────────────────────────────────────────────────────────────

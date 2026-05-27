@@ -1,6 +1,7 @@
 package com.example.microquest
 
 import com.example.microquest.plugins.*
+import com.example.microquest.services.NotificationService
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
@@ -13,4 +14,8 @@ fun Application.module() {
     configureSecurity()
     configureStatusPages()
     configureRouting()
+
+    // Init Firebase Admin SDK for push notifications (optional — disabled if file missing)
+    val serviceAccountPath = System.getenv("FIREBASE_SERVICE_ACCOUNT") ?: "/app/service-account.json"
+    NotificationService.init(serviceAccountPath)
 }

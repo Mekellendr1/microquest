@@ -3,6 +3,7 @@ package com.example.microquest.plugins
 import com.example.microquest.models.Friendships
 import com.example.microquest.models.QuestVotes
 import com.example.microquest.models.ServerQuests
+import com.example.microquest.models.UserAchievements
 import com.example.microquest.models.Users
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
@@ -30,7 +31,7 @@ fun Application.configureDatabase() {
     Database.connect(HikariDataSource(hikari))
 
     transaction {
-        SchemaUtils.createMissingTablesAndColumns(Users, ServerQuests, Friendships, QuestVotes)
+        SchemaUtils.createMissingTablesAndColumns(Users, ServerQuests, Friendships, QuestVotes, UserAchievements)
     }
 
     log.info("Database connected and schema up-to-date.")

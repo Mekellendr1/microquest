@@ -27,7 +27,8 @@ object UserService {
                 xp             = xp,
                 level          = level,
                 xpToNextLevel  = xpForNextLevel(level) - xp,
-                completedCount = count
+                completedCount = count,
+                achievements   = AchievementService.getForUser(row[Users.id].toString())
             )
         }
     }
@@ -65,6 +66,8 @@ object UserService {
                 it[Users.level] = calculateLevel(newXp)
             }
         }
+        // Check achievements after quest sync
+        AchievementService.checkAndAward(userId)
         return getUserDto(userId)!!
     }
 

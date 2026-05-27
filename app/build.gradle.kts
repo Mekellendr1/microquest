@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.google.services)
 }
 
 android {
@@ -67,6 +68,9 @@ dependencies {
     implementation(libs.datastore.preferences)
     // Navigation
     implementation(libs.navigation.compose)
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

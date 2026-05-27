@@ -43,6 +43,9 @@ dependencies {
     // Logging
     implementation("ch.qos.logback:logback-classic:1.5.12")
 
+    // Firebase Admin SDK (for sending push notifications)
+    implementation("com.google.firebase:firebase-admin:9.3.0")
+
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:2.1.0")
 }
