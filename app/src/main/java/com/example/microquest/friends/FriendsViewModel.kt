@@ -8,6 +8,7 @@ import com.example.microquest.network.AddFriendRequest
 import com.example.microquest.network.FriendDto
 import com.example.microquest.network.FriendRequestDto
 import com.example.microquest.network.QuestFeedItem
+import com.example.microquest.network.LeaderboardEntry
 import com.example.microquest.network.VoteRequest
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -18,6 +19,7 @@ data class FriendsUiState(
     val friends: List<FriendDto> = emptyList(),
     val incomingRequests: List<FriendRequestDto> = emptyList(),
     val feed: List<QuestFeedItem> = emptyList(),
+    val leaderboard: List<LeaderboardEntry> = emptyList(),
     val error: String? = null,
     val message: String? = null   // success snackbar text
 )
@@ -37,12 +39,14 @@ class FriendsViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
             try {
-                val friends  = api.getFriends()
-                val requests = api.getFriendRequests()
-                val feed     = api.getFeed()
+                val friends     = api.getFriends()
+                val requests    = api.getFriendRequests()
+                val feed        = api.getFeed()
+                val leaderboard = runCatching { api.getLeaderboard() }.getOrDefault(emptyList())
                 _state.update {
                     it.copy(isLoading = false, friends = friends,
-                        incomingRequests = requests, feed = feed)
+                        incomingRequests = requests, feed = feed,
+                        leaderboard = leaderboard)
                 }
             } catch (e: Exception) {
                 _state.update { it.copy(isLoading = false, error = parseError(e)) }

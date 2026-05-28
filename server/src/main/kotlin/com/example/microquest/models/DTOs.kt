@@ -49,7 +49,20 @@ data class SyncQuestRequest(
     val questText: String,
     val questType: String,
     val completedAt: Long,
-    val proofText: String? = null   // optional proof description
+    val proofText: String? = null,
+    val mediaUrl: String? = null    // uploaded file path from /upload
+)
+
+@Serializable
+data class LeaderboardEntry(
+    val rank: Int,
+    val userId: String,
+    val username: String,
+    val displayName: String,
+    val level: Int,
+    val xp: Int,
+    val completedCount: Int,
+    val isMe: Boolean
 )
 
 @Serializable
@@ -103,6 +116,7 @@ data class QuestFeedItem(
     val questText: String,
     val questType: String,
     val proofText: String?,
+    val mediaUrl: String?,
     val completedAt: Long,
     val xpEarned: Int,
     val status: String,           // PENDING | VERIFIED | REJECTED

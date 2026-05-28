@@ -3,6 +3,7 @@ package com.example.microquest.friends
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -12,12 +13,18 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
+import com.example.microquest.network.ApiClient
 import com.example.microquest.network.FriendDto
 import com.example.microquest.network.FriendRequestDto
+import com.example.microquest.network.LeaderboardEntry
 import com.example.microquest.network.QuestFeedItem
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -70,7 +77,7 @@ fun FriendsScreen(
 
             // Tabs
             val requestBadge = state.incomingRequests.size
-            TabRow(selectedTabIndex = selectedTab) {
+            ScrollableTabRow(selectedTabIndex = selectedTab, edgePadding = 0.dp) {
                 Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 },
                     text = { Text("Друзья (${state.friends.size})") })
                 Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 },
@@ -81,6 +88,8 @@ fun FriendsScreen(
                     })
                 Tab(selected = selectedTab == 2, onClick = { selectedTab = 2 },
                     text = { Text("Лента") })
+                Tab(selected = selectedTab == 3, onClick = { selectedTab = 3 },
+                    text = { Text("🏆 Топ") })
             }
 
             if (state.isLoading) {
@@ -92,6 +101,7 @@ fun FriendsScreen(
                     0 -> FriendsTab(state.friends, vm::removeFriend)
                     1 -> RequestsTab(state.incomingRequests, vm::acceptRequest, vm::declineRequest)
                     2 -> FeedTab(state.feed, vm::vote)
+                    3 -> LeaderboardTab(state.leaderboard)
                 }
             }
         }
@@ -313,6 +323,20 @@ private fun FeedCard(item: QuestFeedItem, onVote: (String, Boolean) -> Unit) {
                 }
             }
 
+            // Proof media (if any)
+            if (!item.mediaUrl.isNullOrBlank()) {
+                val baseUrl = ApiClient.BASE_URL.trimEnd('/')
+                AsyncImage(
+                    model = "$baseUrl${item.mediaUrl}",
+                    contentDescription = "Proof media",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(180.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                )
+            }
+
             // Proof text (if any)
             if (!item.proofText.isNullOrBlank()) {
                 Text("💬 ${item.proofText}",
@@ -364,6 +388,103 @@ private fun FeedCard(item: QuestFeedItem, onVote: (String, Boolean) -> Unit) {
                             else MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
+            }
+        }
+    }
+}
+
+// ── Leaderboard tab ───────────────────────────────────────────────────────────
+
+@Composable
+private fun LeaderboardTab(entries: List<LeaderboardEntry>) {
+    if (entries.isEmpty()) {
+        EmptyState("Лидерборд пуст", "Добавь друзей и выполняй квесты, чтобы соревноваться!")
+        return
+    }
+    LazyColumn(
+        contentPadding = PaddingValues(12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        itemsIndexed(entries, key = { _, e -> e.userId }) { index, entry ->
+            LeaderboardRow(rank = index + 1, entry = entry)
+        }
+    }
+}
+
+@Composable
+private fun LeaderboardRow(rank: Int, entry: LeaderboardEntry) {
+    val medal = when (rank) {
+        1 -> "🥇"; 2 -> "🥈"; 3 -> "🥉"; else -> "#$rank"
+    }
+    val cardColor = if (entry.isMe)
+        MaterialTheme.colorScheme.primaryContainer
+    else
+        MaterialTheme.colorScheme.surface
+
+    ElevatedCard(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.elevatedCardColors(containerColor = cardColor)
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Rank badge
+            Box(
+                modifier = Modifier.size(40.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(medal,
+                    fontSize = if (rank <= 3) 24.sp else 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (rank > 3) MaterialTheme.colorScheme.onSurfaceVariant else Color.Unspecified)
+            }
+
+            // Avatar
+            Surface(shape = CircleShape,
+                color = if (entry.isMe) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.secondaryContainer,
+                modifier = Modifier.size(42.dp)) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        entry.displayName.firstOrNull()?.uppercase() ?: "?",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = if (entry.isMe) MaterialTheme.colorScheme.onPrimary
+                                else MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                }
+            }
+
+            Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(entry.displayName, fontWeight = FontWeight.SemiBold,
+                        style = MaterialTheme.typography.bodyMedium)
+                    if (entry.isMe) {
+                        Surface(
+                            shape = RoundedCornerShape(4.dp),
+                            color = MaterialTheme.colorScheme.primary
+                        ) {
+                            Text("Ты", modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onPrimary)
+                        }
+                    }
+                }
+                Text("Ур. ${entry.level}  •  ${entry.completedCount} квестов",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+
+            // XP
+            Column(horizontalAlignment = Alignment.End) {
+                Text("${entry.xp}", fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary)
+                Text("XP", style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }

@@ -1,5 +1,6 @@
 package com.example.microquest.network
 
+import okhttp3.MultipartBody
 import retrofit2.http.*
 
 interface ApiService {
@@ -51,4 +52,15 @@ interface ApiService {
 
     @PUT("fcm-token")
     suspend fun updateFcmToken(@Body request: FcmTokenRequest): Map<String, String>
+
+    // ── Media upload ──────────────────────────────────────────────────────────
+
+    @Multipart
+    @POST("upload")
+    suspend fun uploadMedia(@Part file: MultipartBody.Part): Map<String, String>
+
+    // ── Leaderboard ───────────────────────────────────────────────────────────
+
+    @GET("leaderboard")
+    suspend fun getLeaderboard(): List<LeaderboardEntry>
 }

@@ -27,8 +27,10 @@ services:
       DB_PASSWORD: postgres
       JWT_SECRET: change-this-in-production-use-long-random-string
       FIREBASE_SERVICE_ACCOUNT: /app/service-account.json
+      MEDIA_DIR: /app/media
     volumes:
       - ./service-account.json:/app/service-account.json:ro
+      - media_data:/app/media
     depends_on:
       postgres:
         condition: service_healthy
@@ -36,3 +38,4 @@ services:
 
 volumes:
   postgres_data:
+  media_data:

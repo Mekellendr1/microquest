@@ -34,7 +34,19 @@ data class SyncQuestRequest(
     val questText: String,
     val questType: String,
     val completedAt: Long,
-    val proofText: String? = null
+    val proofText: String? = null,
+    val mediaUrl: String? = null
+)
+
+data class LeaderboardEntry(
+    val rank: Int,
+    val userId: String,
+    val username: String,
+    val displayName: String,
+    val level: Int,
+    val xp: Int,
+    val completedCount: Int,
+    val isMe: Boolean
 )
 
 data class UpdateProfileRequest(
@@ -81,6 +93,7 @@ data class QuestFeedItem(
     val questText: String,
     val questType: String,
     val proofText: String?,
+    val mediaUrl: String?,
     val completedAt: Long,
     val xpEarned: Int,
     val status: String,

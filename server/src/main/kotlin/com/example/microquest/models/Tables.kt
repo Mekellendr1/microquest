@@ -24,7 +24,8 @@ object ServerQuests : Table("server_quests") {
     val questType   = varchar("quest_type", 20)
     val completedAt = long("completed_at")
     val xpEarned    = integer("xp_earned").default(0)
-    val proofText   = text("proof_text").nullable()      // optional description from user
+    val proofText   = text("proof_text").nullable()
+    val mediaUrl    = text("media_url").nullable()        // uploaded photo/video path
     val status      = varchar("status", 20).default("PENDING") // PENDING | VERIFIED | REJECTED
 
     override val primaryKey = PrimaryKey(id)

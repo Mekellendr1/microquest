@@ -5,6 +5,8 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.UUID
 
+
+
 object UserService {
 
     fun getUserDto(userId: String): UserDto? {
@@ -57,6 +59,7 @@ object UserService {
                 it[ServerQuests.completedAt] = req.completedAt
                 it[ServerQuests.xpEarned]    = xpGain
                 it[ServerQuests.proofText]   = req.proofText
+                it[ServerQuests.mediaUrl]    = req.mediaUrl
                 it[ServerQuests.status]      = "PENDING"
             }
             val row   = Users.selectAll().where { Users.id eq uuid }.first()
@@ -69,6 +72,39 @@ object UserService {
         // Check achievements after quest sync
         AchievementService.checkAndAward(userId)
         return getUserDto(userId)!!
+    }
+
+    fun getLeaderboard(userId: String): List<LeaderboardEntry> {
+        val uid = UUID.fromString(userId)
+        val friendIds: List<UUID> = transaction {
+            Friendships.selectAll().where {
+                ((Friendships.requesterId eq uid) or (Friendships.receiverId eq uid)) and
+                (Friendships.status eq "ACCEPTED")
+            }.map { row ->
+                if (row[Friendships.requesterId] == uid) row[Friendships.receiverId]
+                else row[Friendships.requesterId]
+            }
+        }
+        val allIds = friendIds + uid
+        return transaction {
+            Users.selectAll()
+                .where { Users.id inList allIds }
+                .orderBy(Users.xp, SortOrder.DESC)
+                .mapIndexed { index, row ->
+                    val count = ServerQuests.selectAll()
+                        .where { ServerQuests.userId eq row[Users.id] }.count().toInt()
+                    LeaderboardEntry(
+                        rank           = index + 1,
+                        userId         = row[Users.id].toString(),
+                        username       = row[Users.username],
+                        displayName    = row[Users.displayName],
+                        level          = row[Users.level],
+                        xp             = row[Users.xp],
+                        completedCount = count,
+                        isMe           = row[Users.id] == uid
+                    )
+                }
+        }
     }
 
     // XP needed to reach the NEXT level from current `level`

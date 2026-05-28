@@ -106,11 +106,16 @@ object FriendService {
         val uid = UUID.fromString(userId)
         val fid = UUID.fromString(friendshipId)
         transaction {
-            val deleted = Friendships.deleteWhere {
-                (Friendships.id eq fid) and
-                ((Friendships.requesterId eq uid) or (Friendships.receiverId eq uid))
-            }
-            require(deleted > 0) { "Дружба не найдена" }
+            // Verify user is part of this friendship (eq works inside where{})
+            val row = Friendships.selectAll()
+                .where { Friendships.id eq fid }
+                .firstOrNull()
+            require(
+                row != null &&
+                (row[Friendships.requesterId] == uid || row[Friendships.receiverId] == uid)
+            ) { "Дружба не найдена" }
+            // Delete by ID only — use SqlExpressionBuilder explicitly to bring eq into scope
+            Friendships.deleteWhere { with(SqlExpressionBuilder) { Friendships.id eq fid } }
         }
     }
 
@@ -210,6 +215,7 @@ object FriendService {
                         questText   = qRow[ServerQuests.questText],
                         questType   = qRow[ServerQuests.questType],
                         proofText   = qRow[ServerQuests.proofText],
+                        mediaUrl    = qRow[ServerQuests.mediaUrl],
                         completedAt = qRow[ServerQuests.completedAt],
                         xpEarned    = qRow[ServerQuests.xpEarned],
                         status      = qRow[ServerQuests.status],
