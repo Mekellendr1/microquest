@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "758272545841",
+    "project_id": "questify-129e9",
+    "storage_bucket": "questify-129e9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:758272545841:android:d3139f1dcff9636c71b110",
+        "android_client_info": {
+          "package_name": "com.example.microquest"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyACv0CY31Q-pz_8OVhMZk-l7CkIO-v_i7s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
