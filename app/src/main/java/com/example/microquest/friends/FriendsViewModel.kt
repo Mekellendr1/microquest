@@ -26,7 +26,7 @@ data class FriendsUiState(
 
 class FriendsViewModel(app: Application) : AndroidViewModel(app) {
 
-    private val api = ApiClient.get(app.applicationContext)
+    private val api get() = ApiClient.get(getApplication<Application>().applicationContext)
 
     private val _state = MutableStateFlow(FriendsUiState())
     val state: StateFlow<FriendsUiState> = _state.asStateFlow()

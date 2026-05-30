@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.microquest.data.*
 import com.example.microquest.network.ApiClient
 import com.example.microquest.network.SyncQuestRequest
+import com.example.microquest.sync.SyncWorker
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
@@ -42,8 +43,10 @@ data class QuestUiState(
 
 class QuestViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val dao = AppDatabase.getInstance(application).completedQuestDao()
-    private val api = ApiClient.get(application.applicationContext)
+    private val db         = AppDatabase.getInstance(application)
+    private val dao        = db.completedQuestDao()
+    private val pendingDao = db.pendingSyncDao()
+    private val api get()  = ApiClient.get(getApplication<Application>().applicationContext)
 
     // ── Internal mutable state ───────────────────────────────────────────
     private val _state = MutableStateFlow(QuestUiState())
@@ -104,8 +107,9 @@ class QuestViewModel(application: Application) : AndroidViewModel(application) {
                 )
             )
 
-            // Sync to server silently
+            // Sync to server — если нет сети, кладём в офлайн-очередь
             launch {
+                val ctx = getApplication<Application>().applicationContext
                 try {
                     api.syncQuest(
                         SyncQuestRequest(
@@ -117,8 +121,20 @@ class QuestViewModel(application: Application) : AndroidViewModel(application) {
                             mediaUrl    = serverMediaUrl
                         )
                     )
+                    Log.d("QuestVM", "Quest ${quest.id} synced to server")
                 } catch (e: Exception) {
-                    Log.w("QuestVM", "Server sync failed (offline?): ${e.message}")
+                    Log.w("QuestVM", "Server sync failed, queuing for retry: ${e.message}")
+                    pendingDao.insert(
+                        PendingSync(
+                            questId     = quest.id,
+                            questText   = quest.text,
+                            questType   = quest.type.name,
+                            completedAt = completedAt,
+                            proofText   = answer,
+                            mediaUrl    = serverMediaUrl
+                        )
+                    )
+                    SyncWorker.enqueue(ctx)
                 }
             }
             loadNextQuest()

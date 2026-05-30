@@ -22,7 +22,7 @@ data class AuthState(
 class AuthViewModel(app: Application) : AndroidViewModel(app) {
 
     private val ctx = app.applicationContext
-    private val api = ApiClient.get(ctx)
+    private val api get() = ApiClient.get(ctx)   // always returns current instance after init()
 
     private val _state = MutableStateFlow(AuthState())
     val state: StateFlow<AuthState> = _state.asStateFlow()

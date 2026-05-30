@@ -66,6 +66,7 @@ fun Route.mediaRoutes(mediaDir: File) {
             "mov"         -> ContentType.parse("video/quicktime")
             else          -> ContentType.Application.OctetStream
         }
-        call.respondFile(file, configure = { this.contentType = contentType })
+        call.response.header(HttpHeaders.ContentType, contentType.toString())
+        call.respondFile(file)
     }
 }

@@ -3,6 +3,7 @@ package com.example.microquest.data
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -35,5 +36,16 @@ object TokenStore {
 
     suspend fun clear(ctx: Context) {
         ctx.dataStore.edit { it.clear() }
+    }
+
+    // ── Onboarding ────────────────────────────────────────────────────────────
+
+    private val ONBOARDING_DONE = booleanPreferencesKey("onboarding_done")
+
+    fun onboardingDoneFlow(ctx: Context): Flow<Boolean> =
+        ctx.dataStore.data.map { it[ONBOARDING_DONE] == true }
+
+    suspend fun markOnboardingDone(ctx: Context) {
+        ctx.dataStore.edit { it[ONBOARDING_DONE] = true }
     }
 }

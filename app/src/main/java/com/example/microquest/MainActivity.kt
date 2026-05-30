@@ -53,6 +53,11 @@ import com.example.microquest.data.QuestType
 import com.example.microquest.friends.FriendsScreen
 import com.example.microquest.friends.FriendsViewModel
 import com.example.microquest.profile.ProfileScreen
+import com.example.microquest.data.TokenStore
+import kotlinx.coroutines.launch
+import com.example.microquest.onboarding.OnboardingScreen
+import com.example.microquest.sync.ReminderWorker
+import com.example.microquest.sync.SyncWorker
 import com.example.microquest.ui.theme.MicroQuestTheme
 import java.io.File
 import java.text.SimpleDateFormat
@@ -61,6 +66,10 @@ import java.util.*
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Ежедневное напоминание в 10:00
+        ReminderWorker.schedule(this, hour = 10, minute = 0)
+        // Повторить незавершённые синки при старте
+        SyncWorker.enqueue(this)
         setContent { MicroQuestTheme { AppRoot() } }
     }
 }
@@ -74,10 +83,27 @@ fun AppRoot() {
     val nav    = rememberNavController()
     val authVm = viewModel<AuthViewModel>()
     val authState by authVm.state.collectAsStateWithLifecycle()
+    val ctx = LocalContext.current
 
-    val startDest = if (authState.isLoggedIn) "main" else "login"
+    val onboardingDone by TokenStore.onboardingDoneFlow(ctx)
+        .collectAsState(initial = true)   // true = не мигаем экраном при запуске
+
+    val startDest = when {
+        !onboardingDone       -> "onboarding"
+        authState.isLoggedIn  -> "main"
+        else                  -> "login"
+    }
 
     NavHost(navController = nav, startDestination = startDest) {
+        composable("onboarding") {
+            val scope = rememberCoroutineScope()
+            OnboardingScreen(
+                onFinish = {
+                    scope.launch { TokenStore.markOnboardingDone(ctx) }
+                    nav.navigate("login") { popUpTo("onboarding") { inclusive = true } }
+                }
+            )
+        }
         composable("login") {
             LoginScreen(
                 vm = authVm,
