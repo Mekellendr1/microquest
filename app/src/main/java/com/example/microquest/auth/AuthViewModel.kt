@@ -98,7 +98,7 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
     fun logout(onDone: () -> Unit) {
         viewModelScope.launch {
             ApiClient.cachedToken = null
-            TokenStore.clear(ctx)
+            TokenStore.clearAuth(ctx)
             _state.update { it.copy(isLoggedIn = false, user = null) }
             onDone()
         }

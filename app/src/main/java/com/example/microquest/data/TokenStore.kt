@@ -34,8 +34,19 @@ object TokenStore {
         }
     }
 
+    /** Полная очистка — только для тестов (@Before logout). */
     suspend fun clear(ctx: Context) {
         ctx.dataStore.edit { it.clear() }
+    }
+
+    /** Очистка только токена — используется при выходе из аккаунта, сохраняет onboarding_done. */
+    suspend fun clearAuth(ctx: Context) {
+        ctx.dataStore.edit { p ->
+            p.remove(TOKEN)
+            p.remove(USER_ID)
+            p.remove(USERNAME)
+            p.remove(DISPLAY_NAME)
+        }
     }
 
     // ── Onboarding ────────────────────────────────────────────────────────────

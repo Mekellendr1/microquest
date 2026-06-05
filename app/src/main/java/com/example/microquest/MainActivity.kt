@@ -389,8 +389,8 @@ fun QuestCard(
                 if (pendingVoiceUri != null) Text("✅ Запись сохранена", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedButton(onClick = onSkip, modifier = Modifier.weight(1f)) { Text("⏭ Пропустить") }
-                Button(onClick = onComplete, modifier = Modifier.weight(1f), enabled = canComplete) { Text("✅ Выполнено") }
+                OutlinedButton(onClick = onSkip, modifier = Modifier.weight(1f)) { Text("Пропустить") }
+                Button(onClick = onComplete, modifier = Modifier.weight(1f), enabled = canComplete) { Text("Выполнено") }
             }
         }
     }

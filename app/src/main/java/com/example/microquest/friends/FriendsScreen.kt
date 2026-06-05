@@ -17,6 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -89,7 +90,7 @@ fun FriendsScreen(
                 Tab(selected = selectedTab == 2, onClick = { selectedTab = 2 },
                     text = { Text("Лента") })
                 Tab(selected = selectedTab == 3, onClick = { selectedTab = 3 },
-                    text = { Text("🏆 Топ") })
+                    text = { Text("Топ") })
             }
 
             if (state.isLoading) {
@@ -118,7 +119,7 @@ fun FriendsScreen(
                     onValueChange = { addUsername = it },
                     label = { Text("Имя пользователя (@username)") },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth().testTag("friends_username_input")
                 )
             },
             confirmButton = {

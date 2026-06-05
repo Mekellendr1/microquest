@@ -9,10 +9,12 @@ import com.example.microquest.data.*
 import com.example.microquest.network.ApiClient
 import com.example.microquest.network.SyncQuestRequest
 import com.example.microquest.sync.SyncWorker
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -143,17 +145,19 @@ class QuestViewModel(application: Application) : AndroidViewModel(application) {
 
     /** Upload media file to server, return path like "/media/uuid.jpg" or null on failure. */
     private suspend fun uploadMedia(uri: Uri): String? {
-        return try {
-            val ctx         = getApplication<Application>()
-            val mimeType    = ctx.contentResolver.getType(uri) ?: "image/jpeg"
-            val ext         = if (mimeType.contains("video")) "mp4" else "jpg"
-            val bytes       = ctx.contentResolver.openInputStream(uri)!!.use { it.readBytes() }
-            val requestBody = bytes.toRequestBody(mimeType.toMediaTypeOrNull())
-            val part        = MultipartBody.Part.createFormData("file", "proof.$ext", requestBody)
-            api.uploadMedia(part)["url"]
-        } catch (e: Exception) {
-            Log.w("QuestVM", "Media upload failed: ${e.message}")
-            null
+        return withContext(Dispatchers.IO) {
+            try {
+                val ctx         = getApplication<Application>()
+                val mimeType    = ctx.contentResolver.getType(uri) ?: "image/jpeg"
+                val ext         = if (mimeType.contains("video")) "mp4" else "jpg"
+                val bytes       = ctx.contentResolver.openInputStream(uri)!!.use { it.readBytes() }
+                val requestBody = bytes.toRequestBody(mimeType.toMediaTypeOrNull())
+                val part        = MultipartBody.Part.createFormData("file", "proof.$ext", requestBody)
+                api.uploadMedia(part)["url"]
+            } catch (e: Exception) {
+                Log.w("QuestVM", "Media upload failed: ${e.message}")
+                null
+            }
         }
     }
 

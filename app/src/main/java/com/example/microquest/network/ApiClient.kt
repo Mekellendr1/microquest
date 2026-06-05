@@ -19,7 +19,7 @@ object ApiClient {
      * IP компьютера в локальной сети. Узнать: ipconfig → Wi-Fi → IPv4.
      * Эмулятор: 10.0.2.2
      */
-    const val SERVER_IP = "192.168.0.113"
+    const val SERVER_IP = "10.0.2.2"
     const val BASE_URL  = "http://$SERVER_IP:8090/"
 
     private val TOKEN_KEY = stringPreferencesKey("jwt_token")

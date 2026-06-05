@@ -163,10 +163,8 @@ private fun UserProfileContent(user: UserDto, padding: PaddingValues) {
             }
         }
 
-        // Achievements
-        if (user.achievements.isNotEmpty()) {
-            AchievementsCard(user.achievements)
-        }
+        // Achievements — показываем всегда, даже для новых пользователей
+        AchievementsCard(user.achievements)
     }
 }
 
@@ -188,8 +186,13 @@ private fun AchievementsCard(achievements: List<AchievementDto>) {
                     color = MaterialTheme.colorScheme.primary)
             }
 
-            // Unlocked grid
-            if (unlocked.isNotEmpty()) {
+            if (achievements.isEmpty()) {
+                Text(
+                    "Выполняй квесты, чтобы получить достижения!",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else if (unlocked.isNotEmpty()) {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(4),
                     modifier = Modifier.heightIn(max = 400.dp),
