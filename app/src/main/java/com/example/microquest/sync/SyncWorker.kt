@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit
 class SyncWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, params) {
 
     override suspend fun doWork(): Result {
-        val db  = AppDatabase.getInstance(applicationContext)
+        val db = AppDatabase.getInstance(applicationContext)
         val dao = db.pendingSyncDao()
         val api = ApiClient.get(applicationContext)
 
@@ -25,12 +25,12 @@ class SyncWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, 
             try {
                 api.syncQuest(
                     SyncQuestRequest(
-                        questId     = item.questId,
-                        questText   = item.questText,
-                        questType   = item.questType,
+                        questId = item.questId,
+                        questText = item.questText,
+                        questType = item.questType,
                         completedAt = item.completedAt,
-                        proofText   = item.proofText,
-                        mediaUrl    = item.mediaUrl
+                        proofText = item.proofText,
+                        mediaUrl = item.mediaUrl
                     )
                 )
                 dao.deleteById(item.id)

@@ -37,7 +37,7 @@ class QuestTest {
         rule.waitUntil(15_000) {
             rule.onAllNodes(
                 hasText("Выполнено", ignoreCase = true) or
-                hasText("Пропустить", ignoreCase = true)
+                        hasText("Пропустить", ignoreCase = true)
             ).fetchSemanticsNodes().isNotEmpty()
         }
     }
@@ -46,7 +46,7 @@ class QuestTest {
     fun quest_isDisplayedOnMainScreen() {
         rule.onAllNodes(
             hasText("Выполнено", ignoreCase = true) or
-            hasText("Пропустить", ignoreCase = true)
+                    hasText("Пропустить", ignoreCase = true)
         ).onFirst().assertIsDisplayed()
     }
 
@@ -62,11 +62,13 @@ class QuestTest {
 
     @Test
     fun quest_complete_savesInDatabase() {
-        val dao         = AppDatabase.getInstance(rule.activity.applicationContext).completedQuestDao()
+        val dao = AppDatabase.getInstance(rule.activity.applicationContext).completedQuestDao()
         val countBefore = runBlocking { dao.completedIds().size }
 
         repeat(15) {
-            if (rule.onAllNodes(hasSetTextAction()).fetchSemanticsNodes().isNotEmpty()) return@repeat
+            if (rule.onAllNodes(hasSetTextAction()).fetchSemanticsNodes()
+                    .isNotEmpty()
+            ) return@repeat
             rule.onNodeWithText("Пропустить", ignoreCase = true).performClick()
             rule.waitForIdle()
         }
@@ -86,7 +88,9 @@ class QuestTest {
     fun quest_textType_completeWithAnswer() {
 
         repeat(10) {
-            if (rule.onAllNodes(hasSetTextAction()).fetchSemanticsNodes().isNotEmpty()) return@repeat
+            if (rule.onAllNodes(hasSetTextAction()).fetchSemanticsNodes()
+                    .isNotEmpty()
+            ) return@repeat
             rule.onNodeWithText("Пропустить", ignoreCase = true).performClick()
             rule.waitForIdle()
         }
@@ -108,14 +112,14 @@ class QuestTest {
 
         val timerBtn = rule.onAllNodes(
             hasContentDescription("Таймер", ignoreCase = true) or
-            hasContentDescription("Старт",  ignoreCase = true)
+                    hasContentDescription("Старт", ignoreCase = true)
         ).fetchSemanticsNodes()
 
         if (timerBtn.isEmpty()) return
 
         rule.onAllNodes(
             hasContentDescription("Таймер", ignoreCase = true) or
-            hasContentDescription("Старт",  ignoreCase = true)
+                    hasContentDescription("Старт", ignoreCase = true)
         ).onFirst().performClick()
 
         Thread.sleep(1_500)

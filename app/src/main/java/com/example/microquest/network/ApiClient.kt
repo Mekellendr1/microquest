@@ -15,18 +15,16 @@ import java.util.concurrent.TimeUnit
 
 object ApiClient {
 
-    /**
-     * IP компьютера в локальной сети. Узнать: ipconfig → Wi-Fi → IPv4.
-     * Эмулятор: 10.0.2.2
-     */
     const val SERVER_IP = "10.0.2.2"
-    const val BASE_URL  = "http://$SERVER_IP:8090/"
+    const val BASE_URL = "http://$SERVER_IP:8090/"
 
     private val TOKEN_KEY = stringPreferencesKey("jwt_token")
 
-    @Volatile var cachedToken: String? = null
+    @Volatile
+    var cachedToken: String? = null
 
-    @Volatile private var _service: ApiService? = null
+    @Volatile
+    private var _service: ApiService? = null
 
     fun get(context: Context): ApiService {
         if (_service == null) synchronized(this) {

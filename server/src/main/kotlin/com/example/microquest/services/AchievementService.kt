@@ -126,7 +126,6 @@ object AchievementService {
             }
         }
 
-        // Push notification for each new achievement
         newlyUnlocked.forEach { key ->
             achievementMap[key]?.let { def ->
                 NotificationService.notifyAchievementUnlocked(userId, def.name, def.icon)
@@ -136,7 +135,6 @@ object AchievementService {
         return newlyUnlocked
     }
 
-    /** Returns all achievements with unlock status for this user. */
     fun getForUser(userId: String): List<AchievementDto> {
         val uid = UUID.fromString(userId)
         val unlocked: Map<String, Long> = transaction {

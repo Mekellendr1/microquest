@@ -55,7 +55,9 @@ fun ProfileScreen(
     ) { padding ->
         if (user == null) {
             Box(
-                modifier = Modifier.fillMaxSize().padding(padding),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
                 contentAlignment = Alignment.Center
             ) { CircularProgressIndicator() }
         } else {
@@ -90,8 +92,15 @@ private fun UserProfileContent(user: UserDto, padding: PaddingValues) {
             }
         }
 
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(user.displayName, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                user.displayName,
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold
+            )
             Text("@${user.username}", color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
 
@@ -136,8 +145,15 @@ private fun UserProfileContent(user: UserDto, padding: PaddingValues) {
         }
 
         ElevatedCard(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("Статистика", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Column(
+                modifier = Modifier.padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    "Статистика",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly
@@ -150,8 +166,15 @@ private fun UserProfileContent(user: UserDto, padding: PaddingValues) {
         }
 
         ElevatedCard(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text("Опыт за квесты", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Column(
+                modifier = Modifier.padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Text(
+                    "Опыт за квесты",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
                 XpRow("🏃 Действие (видео)", "40 XP")
                 XpRow("🎙️ Голос", "35 XP")
                 XpRow("📷 Фото", "30 XP")
@@ -166,19 +189,28 @@ private fun UserProfileContent(user: UserDto, padding: PaddingValues) {
 @Composable
 private fun AchievementsCard(achievements: List<AchievementDto>) {
     val unlocked = achievements.filter { it.unlockedAt != null }
-    val locked   = achievements.filter { it.unlockedAt == null }
+    val locked = achievements.filter { it.unlockedAt == null }
 
     ElevatedCard(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Достижения", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Text("${unlocked.size}/${achievements.size}",
+                Text(
+                    "Достижения",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    "${unlocked.size}/${achievements.size}",
                     style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary)
+                    color = MaterialTheme.colorScheme.primary
+                )
             }
 
             if (achievements.isEmpty()) {
@@ -201,11 +233,13 @@ private fun AchievementsCard(achievements: List<AchievementDto>) {
             }
 
             if (locked.size > 4) {
-                Text("+ ещё ${locked.size - 4} заблокированных",
+                Text(
+                    "+ ещё ${locked.size - 4} заблокированных",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center)
+                    textAlign = TextAlign.Center
+                )
             }
         }
     }
@@ -224,7 +258,7 @@ private fun AchievementBadge(ach: AchievementDto, unlocked: Boolean) {
         Surface(
             shape = RoundedCornerShape(12.dp),
             color = if (unlocked) MaterialTheme.colorScheme.primaryContainer
-                    else MaterialTheme.colorScheme.surfaceVariant,
+            else MaterialTheme.colorScheme.surfaceVariant,
             modifier = Modifier.size(56.dp),
             onClick = { showTooltip = !showTooltip }
         ) {
@@ -244,7 +278,7 @@ private fun AchievementBadge(ach: AchievementDto, unlocked: Boolean) {
             textAlign = TextAlign.Center,
             maxLines = 2,
             color = if (unlocked) MaterialTheme.colorScheme.onSurface
-                    else MaterialTheme.colorScheme.onSurfaceVariant
+            else MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 
@@ -262,10 +296,17 @@ private fun AchievementBadge(ach: AchievementDto, unlocked: Boolean) {
 
 @Composable
 private fun StatItem(icon: String, value: String, label: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(2.dp)
+    ) {
         Text(icon, fontSize = 24.sp)
         Text(value, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(
+            label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 
@@ -276,7 +317,9 @@ private fun XpRow(label: String, xp: String) {
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(label, style = MaterialTheme.typography.bodySmall)
-        Text(xp, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary)
+        Text(
+            xp, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary
+        )
     }
 }

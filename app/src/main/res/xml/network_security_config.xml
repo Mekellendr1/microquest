@@ -4,7 +4,7 @@
     <!-- DEV: разрешаем HTTP для любого хоста (эмулятор, телефон в LAN) -->
     <base-config cleartextTrafficPermitted="true">
         <trust-anchors>
-            <certificates src="system"/>
+            <certificates src="system" />
         </trust-anchors>
     </base-config>
 </network-security-config>

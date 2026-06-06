@@ -58,7 +58,7 @@ class FriendsTest {
     @Test
     fun friends_allTabsAreVisible() {
         rule.onNodeWithText("Запросы", ignoreCase = true).assertIsDisplayed()
-        rule.onNodeWithText("Лента",   ignoreCase = true).assertIsDisplayed()
+        rule.onNodeWithText("Лента", ignoreCase = true).assertIsDisplayed()
         rule.onAllNodes(hasText("Топ", ignoreCase = true)).onFirst().assertIsDisplayed()
     }
 
@@ -87,10 +87,10 @@ class FriendsTest {
 
         rule.waitUntil(10_000) {
             rule.onAllNodes(
-                hasText("не найден",     ignoreCase = true, substring = true) or
-                hasText("ошибка",        ignoreCase = true, substring = true) or
-                hasText("не существует", ignoreCase = true, substring = true) or
-                hasText("не найд",       ignoreCase = true, substring = true)
+                hasText("не найден", ignoreCase = true, substring = true) or
+                        hasText("ошибка", ignoreCase = true, substring = true) or
+                        hasText("не существует", ignoreCase = true, substring = true) or
+                        hasText("не найд", ignoreCase = true, substring = true)
             ).fetchSemanticsNodes().isNotEmpty()
         }
     }
@@ -102,9 +102,9 @@ class FriendsTest {
 
         rule.waitUntil(5_000) {
             rule.onAllNodes(
-                hasText("XP",      ignoreCase = true, substring = true) or
-                hasText("пуст",    ignoreCase = true, substring = true) or
-                hasText("друзей",  ignoreCase = true, substring = true)
+                hasText("XP", ignoreCase = true, substring = true) or
+                        hasText("пуст", ignoreCase = true, substring = true) or
+                        hasText("друзей", ignoreCase = true, substring = true)
             ).fetchSemanticsNodes().isNotEmpty()
         }
     }
@@ -115,9 +115,9 @@ class FriendsTest {
 
         rule.waitUntil(10_000) {
             rule.onAllNodes(
-                hasText("пуста",  ignoreCase = true, substring = true) or
-                hasText("квест",  ignoreCase = true, substring = true) or
-                hasText("👍",     ignoreCase = true, substring = true)
+                hasText("пуста", ignoreCase = true, substring = true) or
+                        hasText("квест", ignoreCase = true, substring = true) or
+                        hasText("👍", ignoreCase = true, substring = true)
             ).fetchSemanticsNodes().isNotEmpty()
         }
     }
@@ -130,7 +130,7 @@ class FriendsTest {
         rule.waitUntil(5_000) {
             rule.onAllNodes(
                 hasText("запрос", ignoreCase = true, substring = true) or
-                hasText("нет",    ignoreCase = true, substring = true)
+                        hasText("нет", ignoreCase = true, substring = true)
             ).fetchSemanticsNodes().isNotEmpty()
         }
     }
@@ -144,8 +144,8 @@ class FriendsTest {
 
     @Test
     fun friends_feedVoting_works() {
-        val ts       = System.currentTimeMillis()
-        val userBName  = "testb_${ts % 100_000}"
+        val ts = System.currentTimeMillis()
+        val userBName = "testb_${ts % 100_000}"
         val userBEmail = "testb_${ts % 100_000}@test.com"
 
         val anonApi = buildApi(null)
@@ -164,14 +164,16 @@ class FriendsTest {
         runBlocking { apiA.acceptFriendRequest(req.friendshipId) }
 
         runBlocking {
-            apiB.syncQuest(SyncQuestRequest(
-                questId     = (ts % 1_000_000).toInt(),
-                questText   = "Напиши что-нибудь вдохновляющее",
-                questType   = "TEXT",
-                completedAt = ts / 1000,
-                proofText   = "Жизнь прекрасна! Тест $userBName",
-                mediaUrl    = null
-            ))
+            apiB.syncQuest(
+                SyncQuestRequest(
+                    questId = (ts % 1_000_000).toInt(),
+                    questText = "Напиши что-нибудь вдохновляющее",
+                    questType = "TEXT",
+                    completedAt = ts / 1000,
+                    proofText = "Жизнь прекрасна! Тест $userBName",
+                    mediaUrl = null
+                )
+            )
         }
 
         rule.onNodeWithText("Лента", ignoreCase = true).performClick()

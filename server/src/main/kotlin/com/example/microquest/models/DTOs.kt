@@ -50,7 +50,7 @@ data class SyncQuestRequest(
     val questType: String,
     val completedAt: Long,
     val proofText: String? = null,
-    val mediaUrl: String? = null    // uploaded file path from /upload
+    val mediaUrl: String? = null
 )
 
 @Serializable
@@ -68,18 +68,14 @@ data class LeaderboardEntry(
 @Serializable
 data class FcmTokenRequest(val token: String)
 
-// ── Achievements ──────────────────────────────────────────────────────────────
-
 @Serializable
 data class AchievementDto(
     val key: String,
     val name: String,
     val description: String,
     val icon: String,
-    val unlockedAt: Long?   // null = locked
+    val unlockedAt: Long?
 )
-
-// ── Friends ───────────────────────────────────────────────────────────────────
 
 @Serializable
 data class FriendDto(
@@ -95,7 +91,7 @@ data class FriendDto(
 @Serializable
 data class FriendRequestDto(
     val friendshipId: String,
-    val from: FriendDto,   // requester info
+    val from: FriendDto,
     val createdAt: Long
 )
 
@@ -105,11 +101,9 @@ data class AddFriendRequest(val username: String)
 @Serializable
 data class FriendActionRequest(val friendshipId: String)
 
-// ── Quest feed / voting ───────────────────────────────────────────────────────
-
 @Serializable
 data class QuestFeedItem(
-    val questId: String,          // server_quests.id (UUID)
+    val questId: String,
     val userId: String,
     val username: String,
     val displayName: String,
@@ -119,14 +113,14 @@ data class QuestFeedItem(
     val mediaUrl: String?,
     val completedAt: Long,
     val xpEarned: Int,
-    val status: String,           // PENDING | VERIFIED | REJECTED
+    val status: String,
     val approvals: Int,
     val rejections: Int,
-    val myVote: Boolean?          // null = not voted, true = approved, false = rejected
+    val myVote: Boolean?
 )
 
 @Serializable
 data class VoteRequest(
-    val questId: String,   // server_quests.id (UUID)
+    val questId: String,
     val approve: Boolean
 )

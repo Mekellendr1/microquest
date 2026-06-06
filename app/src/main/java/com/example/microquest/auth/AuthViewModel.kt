@@ -31,7 +31,7 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             ApiClient.loadToken(ctx)
             TokenStore.tokenFlow(ctx).collect { token ->
-                ApiClient.cachedToken = token   // keep interceptor in sync
+                ApiClient.cachedToken = token
                 _state.update { it.copy(isLoggedIn = token != null) }
             }
         }
@@ -47,7 +47,13 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
             try {
                 val res = api.login(LoginRequest(email.trim(), password))
                 ApiClient.cachedToken = res.token
-                TokenStore.save(ctx, res.token, res.user.id, res.user.username, res.user.displayName)
+                TokenStore.save(
+                    ctx,
+                    res.token,
+                    res.user.id,
+                    res.user.username,
+                    res.user.displayName
+                )
                 _state.update { it.copy(isLoading = false, user = res.user, isLoggedIn = true) }
                 onSuccess()
             } catch (e: Exception) {
@@ -68,14 +74,20 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
             try {
                 val res = api.register(
                     RegisterRequest(
-                        username    = username.trim(),
-                        email       = email.trim(),
-                        password    = password,
+                        username = username.trim(),
+                        email = email.trim(),
+                        password = password,
                         displayName = displayName.trim().ifBlank { username.trim() }
                     )
                 )
                 ApiClient.cachedToken = res.token
-                TokenStore.save(ctx, res.token, res.user.id, res.user.username, res.user.displayName)
+                TokenStore.save(
+                    ctx,
+                    res.token,
+                    res.user.id,
+                    res.user.username,
+                    res.user.displayName
+                )
                 _state.update { it.copy(isLoading = false, user = res.user, isLoggedIn = true) }
                 onSuccess()
             } catch (e: Exception) {
@@ -89,7 +101,8 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
             try {
                 val user = api.getProfile()
                 _state.update { it.copy(user = user) }
-            } catch (_: Exception) { }
+            } catch (_: Exception) {
+            }
         }
     }
 
@@ -113,10 +126,13 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
                     ?: "Ошибка сервера (${e.code()})"
             }.getOrDefault("Ошибка сервера (${e.code()})")
         }
+
         is java.net.ConnectException, is java.net.SocketException ->
             "Нет подключения к серверу"
+
         is java.net.SocketTimeoutException ->
             "Сервер не отвечает — проверь подключение"
+
         else -> e.message ?: "Неизвестная ошибка"
     }
 }

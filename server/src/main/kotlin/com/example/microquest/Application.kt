@@ -15,7 +15,6 @@ fun Application.module() {
     configureStatusPages()
     configureRouting()
 
-    // Init Firebase Admin SDK for push notifications (optional — disabled if file missing)
     val serviceAccountPath = System.getenv("FIREBASE_SERVICE_ACCOUNT") ?: "/app/service-account.json"
     NotificationService.init(serviceAccountPath)
 }

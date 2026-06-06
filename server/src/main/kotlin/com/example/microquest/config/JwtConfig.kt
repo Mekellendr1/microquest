@@ -19,7 +19,6 @@ object JwtConfig {
     val jwtIssuer   get() = issuer
     val jwtAudience get() = audience
 
-    /** Generates a JWT valid for 30 days. */
     fun generateToken(userId: String): String =
         JWT.create()
             .withAudience(audience)

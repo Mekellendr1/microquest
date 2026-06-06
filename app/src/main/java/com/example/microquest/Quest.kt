@@ -23,9 +23,9 @@ data class CompletedQuest(
     @PrimaryKey(autoGenerate = true) val rowId: Long = 0,
     val questId: Int,
     val questText: String,
-    val questType: String,            // QuestType.name()
+    val questType: String,
     val completedAt: Long = Instant.now().epochSecond,
-    val photoUri: String? = null, // only for PHOTO quests
+    val photoUri: String? = null,
     val userAnswer: String? = null,
     val voiceUri: String? = null,
     val videoUri: String? = null
@@ -33,8 +33,10 @@ data class CompletedQuest(
 
 
 class Converters {
-    @TypeConverter fun fromQuestType(value: QuestType): String = value.name
-    @TypeConverter fun toQuestType(value: String): QuestType = QuestType.valueOf(value)
+    @TypeConverter
+    fun fromQuestType(value: QuestType): String = value.name
+    @TypeConverter
+    fun toQuestType(value: String): QuestType = QuestType.valueOf(value)
 }
 
 
@@ -114,7 +116,8 @@ abstract class AppDatabase : RoomDatabase() {
         }
         private val MIGRATION_4_5 = object : Migration(4, 5) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("""
+                db.execSQL(
+                    """
                     CREATE TABLE IF NOT EXISTS pending_sync (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                         questId INTEGER NOT NULL,
@@ -125,10 +128,12 @@ abstract class AppDatabase : RoomDatabase() {
                         mediaUrl TEXT,
                         retryCount INTEGER NOT NULL DEFAULT 0
                     )
-                """.trimIndent())
+                """.trimIndent()
+                )
             }
         }
-        @Volatile private var INSTANCE: AppDatabase? = null
+        @Volatile
+        private var INSTANCE: AppDatabase? = null
 
         fun getInstance(context: android.content.Context): AppDatabase =
             INSTANCE ?: synchronized(this) {

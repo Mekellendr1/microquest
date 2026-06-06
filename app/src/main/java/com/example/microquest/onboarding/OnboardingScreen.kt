@@ -79,7 +79,7 @@ fun OnboardingScreen(onFinish: () -> Unit) {
                 targetState = page.title,
                 transitionSpec = {
                     slideInHorizontally(tween(300)) { it } + fadeIn(tween(300)) togetherWith
-                    slideOutHorizontally(tween(300)) { -it } + fadeOut(tween(300))
+                            slideOutHorizontally(tween(300)) { -it } + fadeOut(tween(300))
                 },
                 label = "title"
             ) { title ->
@@ -152,8 +152,10 @@ fun OnboardingScreen(onFinish: () -> Unit) {
 
             if (currentPage < pages.lastIndex) {
                 TextButton(onClick = onFinish) {
-                    Text("Пропустить",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        "Пропустить",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
         }

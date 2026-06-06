@@ -31,21 +31,25 @@ class FriendsViewModel(app: Application) : AndroidViewModel(app) {
     private val _state = MutableStateFlow(FriendsUiState())
     val state: StateFlow<FriendsUiState> = _state.asStateFlow()
 
-    init { refresh() }
+    init {
+        refresh()
+    }
 
 
     fun refresh() {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
             try {
-                val friends     = api.getFriends()
-                val requests    = api.getFriendRequests()
-                val feed        = api.getFeed()
+                val friends = api.getFriends()
+                val requests = api.getFriendRequests()
+                val feed = api.getFeed()
                 val leaderboard = runCatching { api.getLeaderboard() }.getOrDefault(emptyList())
                 _state.update {
-                    it.copy(isLoading = false, friends = friends,
+                    it.copy(
+                        isLoading = false, friends = friends,
                         incomingRequests = requests, feed = feed,
-                        leaderboard = leaderboard)
+                        leaderboard = leaderboard
+                    )
                 }
             } catch (e: Exception) {
                 _state.update { it.copy(isLoading = false, error = parseError(e)) }
@@ -60,7 +64,12 @@ class FriendsViewModel(app: Application) : AndroidViewModel(app) {
             _state.update { it.copy(isLoading = true, error = null) }
             try {
                 api.sendFriendRequest(AddFriendRequest(username.trim()))
-                _state.update { it.copy(isLoading = false, message = "Запрос отправлен @$username") }
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        message = "Запрос отправлен @$username"
+                    )
+                }
                 refresh()
             } catch (e: Exception) {
                 _state.update { it.copy(isLoading = false, error = parseError(e)) }
@@ -93,7 +102,6 @@ class FriendsViewModel(app: Application) : AndroidViewModel(app) {
     }
 
 
-
     fun removeFriend(friendshipId: String) {
         viewModelScope.launch {
             try {
@@ -116,13 +124,13 @@ class FriendsViewModel(app: Application) : AndroidViewModel(app) {
                             val wasApproved = item.myVote == true
                             val wasRejected = item.myVote == false
                             item.copy(
-                                myVote     = approve,
-                                approvals  = item.approvals
-                                    - (if (wasApproved) 1 else 0)
-                                    + (if (approve) 1 else 0),
+                                myVote = approve,
+                                approvals = item.approvals
+                                        - (if (wasApproved) 1 else 0)
+                                        + (if (approve) 1 else 0),
                                 rejections = item.rejections
-                                    - (if (wasRejected) 1 else 0)
-                                    + (if (!approve) 1 else 0)
+                                        - (if (wasRejected) 1 else 0)
+                                        + (if (!approve) 1 else 0)
                             )
                         } else item
                     })
@@ -134,7 +142,7 @@ class FriendsViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun clearMessage() = _state.update { it.copy(message = null) }
-    fun clearError()   = _state.update { it.copy(error = null) }
+    fun clearError() = _state.update { it.copy(error = null) }
 
 
     private fun parseError(e: Exception): String = when (e) {
@@ -143,6 +151,7 @@ class FriendsViewModel(app: Application) : AndroidViewModel(app) {
             Regex("\"error\"\\s*:\\s*\"([^\"]+)\"").find(body)?.groupValues?.get(1)
                 ?: "Ошибка сервера (${e.code()})"
         }.getOrDefault("Ошибка сервера (${e.code()})")
+
         is java.net.ConnectException -> "Нет соединения с сервером"
         else -> e.message ?: "Неизвестная ошибка"
     }

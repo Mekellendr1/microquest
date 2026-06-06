@@ -14,7 +14,7 @@ fun Route.mediaRoutes(mediaDir: File) {
 
     authenticate("auth-jwt") {
         post("/upload") {
-            val multipart = call.receiveMultipart(formFieldLimit = 52_428_800L) // 50 MB
+            val multipart = call.receiveMultipart(formFieldLimit = 52_428_800L)
             var savedPath: String? = null
 
             multipart.forEachPart { part ->

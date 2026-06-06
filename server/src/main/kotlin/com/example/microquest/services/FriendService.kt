@@ -7,8 +7,6 @@ import java.util.UUID
 
 object FriendService {
 
-    // ── Send friend request ───────────────────────────────────────────────────
-
     fun sendRequest(requesterId: String, targetUsername: String): FriendDto {
         val rId = UUID.fromString(requesterId)
 
@@ -19,7 +17,6 @@ object FriendService {
         val tId = targetRow[Users.id]
         require(rId != tId) { "Нельзя добавить себя в друзья" }
 
-        // Check for existing friendship in either direction
         transaction {
             val existing = Friendships.selectAll().where {
                 ((Friendships.requesterId eq rId) and (Friendships.receiverId eq tId)) or
@@ -45,10 +42,8 @@ object FriendService {
             }
         }
 
-        // Check achievements for requester (first_friend etc.)
         AchievementService.checkAndAward(requesterId)
 
-        // Notify receiver
         val requesterName = transaction {
             Users.selectAll().where { Users.id eq rId }.first()[Users.username]
         }
@@ -68,8 +63,6 @@ object FriendService {
         )
     }
 
-    // ── Respond to request ────────────────────────────────────────────────────
-
     fun respondToRequest(userId: String, friendshipId: String, accept: Boolean) {
         val uid = UUID.fromString(userId)
         val fid = UUID.fromString(friendshipId)
@@ -88,11 +81,9 @@ object FriendService {
             }
         }
         if (accept) {
-            // Both sides may unlock friend achievements
             AchievementService.checkAndAward(userId)
             requesterId?.let { AchievementService.checkAndAward(it) }
 
-            // Notify requester
             val acceptorName = transaction {
                 Users.selectAll().where { Users.id eq uid }.first()[Users.username]
             }
@@ -100,13 +91,10 @@ object FriendService {
         }
     }
 
-    // ── Remove friend ─────────────────────────────────────────────────────────
-
     fun removeFriend(userId: String, friendshipId: String) {
         val uid = UUID.fromString(userId)
         val fid = UUID.fromString(friendshipId)
         transaction {
-            // Verify user is part of this friendship (eq works inside where{})
             val row = Friendships.selectAll()
                 .where { Friendships.id eq fid }
                 .firstOrNull()
@@ -114,12 +102,9 @@ object FriendService {
                 row != null &&
                 (row[Friendships.requesterId] == uid || row[Friendships.receiverId] == uid)
             ) { "Дружба не найдена" }
-            // Delete by ID only — use SqlExpressionBuilder explicitly to bring eq into scope
             Friendships.deleteWhere { with(SqlExpressionBuilder) { Friendships.id eq fid } }
         }
     }
-
-    // ── List accepted friends ─────────────────────────────────────────────────
 
     fun listFriends(userId: String): List<FriendDto> {
         val uid = UUID.fromString(userId)
@@ -146,8 +131,6 @@ object FriendService {
             }
         }
     }
-
-    // ── Incoming pending requests ─────────────────────────────────────────────
 
     fun listIncomingRequests(userId: String): List<FriendRequestDto> {
         val uid = UUID.fromString(userId)
@@ -176,12 +159,9 @@ object FriendService {
         }
     }
 
-    // ── Quest feed (friends' completed quests) ────────────────────────────────
-
     fun getFeed(userId: String): List<QuestFeedItem> {
         val uid = UUID.fromString(userId)
 
-        // Collect friend IDs
         val friendIds: List<UUID> = transaction {
             Friendships.selectAll().where {
                 ((Friendships.requesterId eq uid) or (Friendships.receiverId eq uid)) and
@@ -227,8 +207,6 @@ object FriendService {
         }
     }
 
-    // ── Vote on a quest ───────────────────────────────────────────────────────
-
     fun vote(userId: String, req: VoteRequest) {
         val uid  = UUID.fromString(userId)
         val quid = UUID.fromString(req.questId)
@@ -237,7 +215,6 @@ object FriendService {
             val questRow = ServerQuests.selectAll().where { ServerQuests.id eq quid }.firstOrNull()
                 ?: error("Квест не найден")
 
-            // Can only vote on friends' quests
             val questOwnerId = questRow[ServerQuests.userId]
             require(questOwnerId != uid) { "Нельзя голосовать за свой квест" }
 
@@ -248,7 +225,6 @@ object FriendService {
             }.count() > 0
             require(areFriends) { "Можно голосовать только за квесты друзей" }
 
-            // Upsert vote
             val existing = QuestVotes.selectAll()
                 .where { (QuestVotes.questId eq quid) and (QuestVotes.voterId eq uid) }
                 .firstOrNull()
@@ -264,7 +240,6 @@ object FriendService {
                 }
             }
 
-            // Auto-verify: if at least 1 approval → VERIFIED
             val approvals = QuestVotes.selectAll()
                 .where { (QuestVotes.questId eq quid) and (QuestVotes.approve eq true) }
                 .count()
@@ -274,7 +249,6 @@ object FriendService {
                 }
             }
         }
-        // Check achievements for voter (first_vote) and quest owner (verified_quest)
         AchievementService.checkAndAward(userId)
         val questOwner = transaction {
             ServerQuests.selectAll().where { ServerQuests.id eq quid }
@@ -282,7 +256,6 @@ object FriendService {
         }
         AchievementService.checkAndAward(questOwner)
 
-        // Notify quest owner if just verified
         if (req.approve) {
             val questRow = transaction {
                 ServerQuests.selectAll().where { ServerQuests.id eq quid }.first()

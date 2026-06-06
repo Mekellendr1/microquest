@@ -34,10 +34,10 @@ fun RegisterScreen(
     val state by vm.state.collectAsStateWithLifecycle()
     val focus = LocalFocusManager.current
 
-    var username    by remember { mutableStateOf("") }
+    var username by remember { mutableStateOf("") }
     var displayName by remember { mutableStateOf("") }
-    var email       by remember { mutableStateOf("") }
-    var password    by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
     var passVisible by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -68,7 +68,9 @@ fun RegisterScreen(
                 placeholder = { Text("латиница, цифры, _") },
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                 keyboardActions = KeyboardActions(onNext = { focus.moveFocus(FocusDirection.Down) }),
-                modifier = Modifier.fillMaxWidth().testTag("register_username"),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("register_username"),
                 singleLine = true
             )
 
@@ -78,7 +80,9 @@ fun RegisterScreen(
                 label = { Text("Отображаемое имя (необязательно)") },
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                 keyboardActions = KeyboardActions(onNext = { focus.moveFocus(FocusDirection.Down) }),
-                modifier = Modifier.fillMaxWidth().testTag("register_displayname"),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("register_displayname"),
                 singleLine = true
             )
 
@@ -91,7 +95,9 @@ fun RegisterScreen(
                     imeAction = ImeAction.Next
                 ),
                 keyboardActions = KeyboardActions(onNext = { focus.moveFocus(FocusDirection.Down) }),
-                modifier = Modifier.fillMaxWidth().testTag("register_email"),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("register_email"),
                 singleLine = true
             )
 
@@ -118,19 +124,27 @@ fun RegisterScreen(
                         )
                     }
                 },
-                modifier = Modifier.fillMaxWidth().testTag("register_password"),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("register_password"),
                 singleLine = true
             )
 
             state.error?.let { err ->
-                Text(err, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                Text(
+                    err,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
             }
 
             Spacer(Modifier.height(4.dp))
 
             Button(
                 onClick = { vm.register(username, email, password, displayName) { onSuccess() } },
-                modifier = Modifier.fillMaxWidth().height(52.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
                 enabled = !state.isLoading
             ) {
                 if (state.isLoading) {

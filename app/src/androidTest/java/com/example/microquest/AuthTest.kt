@@ -16,11 +16,11 @@ class AuthTest {
     @get:Rule
     val rule = createAndroidComposeRule<MainActivity>()
 
-    private val ts           = System.currentTimeMillis() % 100_000
-    private val testEmail    = "test_$ts@demo.com"
+    private val ts = System.currentTimeMillis() % 100_000
+    private val testEmail = "test_$ts@demo.com"
     private val testPassword = "password123"
     private val testUsername = "user_$ts"
-    private val testDisplay  = "Тест Юзер"
+    private val testDisplay = "Тест Юзер"
 
     @Before
     fun logout() {
@@ -41,8 +41,10 @@ class AuthTest {
         rule.onNodeWithText("Создать аккаунт").performClick()
 
         rule.waitUntil(15_000) {
-            rule.onAllNodes(hasText("Выполнено", ignoreCase = true) or
-                            hasText("Пропустить", ignoreCase = true))
+            rule.onAllNodes(
+                hasText("Выполнено", ignoreCase = true) or
+                        hasText("Пропустить", ignoreCase = true)
+            )
                 .fetchSemanticsNodes().isNotEmpty()
         }
     }
@@ -68,11 +70,11 @@ class AuthTest {
 
         rule.waitUntil(15_000) {
             rule.onAllNodes(
-                hasText("ошибка",      ignoreCase = true, substring = true) or
-                hasText("неверн",      ignoreCase = true, substring = true) or
-                hasText("не найд",     ignoreCase = true, substring = true) or
-                hasText("подключени",  ignoreCase = true, substring = true) or
-                hasText("не отвечает", ignoreCase = true, substring = true)
+                hasText("ошибка", ignoreCase = true, substring = true) or
+                        hasText("неверн", ignoreCase = true, substring = true) or
+                        hasText("не найд", ignoreCase = true, substring = true) or
+                        hasText("подключени", ignoreCase = true, substring = true) or
+                        hasText("не отвечает", ignoreCase = true, substring = true)
             ).fetchSemanticsNodes().isNotEmpty()
         }
     }
@@ -80,8 +82,8 @@ class AuthTest {
     @Test
     fun login_withValidCredentials_opensMainScreen() {
 
-        val ts2       = System.currentTimeMillis()
-        val email2    = "login_$ts2@demo.com"
+        val ts2 = System.currentTimeMillis()
+        val email2 = "login_$ts2@demo.com"
         val username2 = "login_$ts2"
 
         navigateToRegister()
@@ -121,7 +123,12 @@ class AuthTest {
         }
     }
 
-    private fun fillRegisterForm(username: String, email: String, display: String, password: String) {
+    private fun fillRegisterForm(
+        username: String,
+        email: String,
+        display: String,
+        password: String
+    ) {
         rule.onNodeWithTag("register_username").performTextInput(username)
         rule.onNodeWithTag("register_email").performTextInput(email)
         rule.onNodeWithTag("register_displayname").performTextInput(display)

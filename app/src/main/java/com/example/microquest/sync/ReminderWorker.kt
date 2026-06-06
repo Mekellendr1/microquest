@@ -20,7 +20,7 @@ class ReminderWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(c
 
         val todayStart = Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0);      set(Calendar.MILLISECOND, 0)
+            set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
         }.timeInMillis / 1000
 
         val doneToday = dao.completedIds().isNotEmpty()
@@ -70,9 +70,9 @@ class ReminderWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(c
     }
 
     companion object {
-        private const val CHANNEL_ID     = "questify_reminder"
+        private const val CHANNEL_ID = "questify_reminder"
         private const val NOTIFICATION_ID = 1001
-        private const val WORK_NAME      = "questify_daily_reminder"
+        private const val WORK_NAME = "questify_daily_reminder"
 
         fun schedule(context: Context, hour: Int = 10, minute: Int = 0) {
             val delay = calculateInitialDelay(hour, minute)

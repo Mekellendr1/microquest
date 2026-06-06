@@ -69,7 +69,6 @@ object UserService {
                 it[Users.level] = calculateLevel(newXp)
             }
         }
-        // Check achievements after quest sync
         AchievementService.checkAndAward(userId)
         return getUserDto(userId)!!
     }
@@ -107,14 +106,11 @@ object UserService {
         }
     }
 
-    // XP needed to reach the NEXT level from current `level`
     private fun xpForNextLevel(level: Int): Int = level * level * 100
 
-    // Which level does `xp` correspond to?
-    // Level 1 = 0..99 XP, Level 2 = 100..399 XP, Level 3 = 400..899 XP, ...
     private fun calculateLevel(xp: Int): Int {
         var lv = 1
         while (xp >= xpForNextLevel(lv)) lv++
-        return lv   // lv-1 was a bug: new users got downgraded to level 0 after first quest
+        return lv
     }
 }

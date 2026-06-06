@@ -42,13 +42,15 @@ class OfflineTest {
 
     @Test
     fun offline_questCompletedLocally_savedInRoom() {
-        val db  = AppDatabase.getInstance(rule.activity.applicationContext)
+        val db = AppDatabase.getInstance(rule.activity.applicationContext)
         val dao = db.completedQuestDao()
 
         val countBefore = runBlocking { dao.completedIds().size }
 
         repeat(15) {
-            if (rule.onAllNodes(hasSetTextAction()).fetchSemanticsNodes().isNotEmpty()) return@repeat
+            if (rule.onAllNodes(hasSetTextAction()).fetchSemanticsNodes()
+                    .isNotEmpty()
+            ) return@repeat
             rule.onNodeWithText("Пропустить", ignoreCase = true).performClick()
             rule.waitForIdle()
         }
@@ -68,7 +70,9 @@ class OfflineTest {
     fun offline_syncWorker_enqueued() {
 
         repeat(15) {
-            if (rule.onAllNodes(hasSetTextAction()).fetchSemanticsNodes().isNotEmpty()) return@repeat
+            if (rule.onAllNodes(hasSetTextAction()).fetchSemanticsNodes()
+                    .isNotEmpty()
+            ) return@repeat
             rule.onNodeWithText("Пропустить", ignoreCase = true).performClick()
             rule.waitForIdle()
         }
@@ -88,7 +92,7 @@ class OfflineTest {
 
     @Test
     fun pendingSync_emptyAfterSuccessfulSync() {
-        val db         = AppDatabase.getInstance(rule.activity.applicationContext)
+        val db = AppDatabase.getInstance(rule.activity.applicationContext)
         val pendingDao = db.pendingSyncDao()
 
         rule.waitUntil(15_000) {

@@ -60,7 +60,7 @@ data class AchievementDto(
     val name: String,
     val description: String,
     val icon: String,
-    val unlockedAt: Long?   // null = locked
+    val unlockedAt: Long?
 )
 
 

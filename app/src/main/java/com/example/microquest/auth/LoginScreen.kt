@@ -32,7 +32,7 @@ fun LoginScreen(
     val state by vm.state.collectAsStateWithLifecycle()
     val focus = LocalFocusManager.current
 
-    var email    by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passVisible by remember { mutableStateOf(false) }
 
@@ -112,7 +112,9 @@ fun LoginScreen(
 
         Button(
             onClick = { vm.login(email, password) { onLoginSuccess() } },
-            modifier = Modifier.fillMaxWidth().height(52.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp),
             enabled = !state.isLoading
         ) {
             if (state.isLoading) {

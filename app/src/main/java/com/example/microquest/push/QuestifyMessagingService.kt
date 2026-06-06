@@ -42,7 +42,7 @@ class QuestifyMessagingService : FirebaseMessagingService() {
 
     override fun onMessageReceived(message: RemoteMessage) {
         val title = message.notification?.title ?: message.data["title"] ?: return
-        val body  = message.notification?.body  ?: message.data["body"]  ?: return
+        val body = message.notification?.body ?: message.data["body"] ?: return
         showNotification(title, body)
     }
 
