@@ -25,15 +25,13 @@ object ServerQuests : Table("server_quests") {
     val completedAt = long("completed_at")
     val xpEarned    = integer("xp_earned").default(0)
     val proofText   = text("proof_text").nullable()
-    val mediaUrl    = text("media_url").nullable()        // uploaded photo/video path
-    val status      = varchar("status", 20).default("PENDING") // PENDING | VERIFIED | REJECTED
+    val mediaUrl    = text("media_url").nullable()
+    val status      = varchar("status", 20).default("PENDING")
 
     override val primaryKey = PrimaryKey(id)
 }
 
-// ── Achievements ──────────────────────────────────────────────────────────────
 
-/** Tracks which achievements each user has unlocked. */
 object UserAchievements : Table("user_achievements") {
     val id             = uuid("id").autoGenerate()
     val userId         = uuid("user_id").references(Users.id)
@@ -41,24 +39,20 @@ object UserAchievements : Table("user_achievements") {
     val unlockedAt     = long("unlocked_at")
 
     override val primaryKey = PrimaryKey(id)
-    init { uniqueIndex(userId, achievementKey) } // unlock once per user
+    init { uniqueIndex(userId, achievementKey) }
 }
 
-// ── Social ────────────────────────────────────────────────────────────────────
 
-/** Friend requests / friendships between users. */
 object Friendships : Table("friendships") {
     val id          = uuid("id").autoGenerate()
     val requesterId = uuid("requester_id").references(Users.id)
     val receiverId  = uuid("receiver_id").references(Users.id)
-    /** PENDING | ACCEPTED | DECLINED */
     val status      = varchar("status", 20).default("PENDING")
     val createdAt   = long("created_at")
 
     override val primaryKey = PrimaryKey(id)
 }
 
-/** One vote per user per quest: approve = true, reject = false. */
 object QuestVotes : Table("quest_votes") {
     val id       = uuid("id").autoGenerate()
     val questId  = uuid("quest_id").references(ServerQuests.id)
@@ -66,5 +60,5 @@ object QuestVotes : Table("quest_votes") {
     val approve  = bool("approve")
 
     override val primaryKey = PrimaryKey(id)
-    init { uniqueIndex(questId, voterId) } // one vote per user per quest
+    init { uniqueIndex(questId, voterId) }
 }

@@ -6,15 +6,9 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.coroutines.flow.Flow
 import java.time.Instant
 
-// ─────────────────────────────────────────
-//  Enums
-// ─────────────────────────────────────────
 
 enum class QuestType { TEXT, PHOTO, ACTION, VOICE }
 
-// ─────────────────────────────────────────
-//  Domain model (in-memory, not stored)
-// ─────────────────────────────────────────
 
 data class Quest(
     val id: Int,
@@ -23,9 +17,6 @@ data class Quest(
     val durationSeconds: Int = 30
 )
 
-// ─────────────────────────────────────────
-//  Room Entity — completed quests history
-// ─────────────────────────────────────────
 
 @Entity(tableName = "completed_quests")
 data class CompletedQuest(
@@ -40,19 +31,12 @@ data class CompletedQuest(
     val videoUri: String? = null
 )
 
-// ─────────────────────────────────────────
-//  Type converters (not needed here, but
-//  kept as extension point)
-// ─────────────────────────────────────────
 
 class Converters {
     @TypeConverter fun fromQuestType(value: QuestType): String = value.name
     @TypeConverter fun toQuestType(value: String): QuestType = QuestType.valueOf(value)
 }
 
-// ─────────────────────────────────────────
-//  DAO
-// ─────────────────────────────────────────
 
 @Dao
 interface CompletedQuestDao {
@@ -60,15 +44,12 @@ interface CompletedQuestDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(quest: CompletedQuest): Long
 
-    /** All completed quest IDs — used to exclude them from random selection. */
     @Query("SELECT questId FROM completed_quests")
     suspend fun completedIds(): List<Int>
 
-    /** Full history, newest first. */
     @Query("SELECT * FROM completed_quests ORDER BY completedAt DESC")
     fun historyFlow(): Flow<List<CompletedQuest>>
 
-    /** Total count — emits on every change. */
     @Query("SELECT COUNT(*) FROM completed_quests")
     fun countFlow(): Flow<Int>
 
@@ -76,9 +57,6 @@ interface CompletedQuestDao {
     suspend fun clearAll()
 }
 
-// ─────────────────────────────────────────
-//  Room Entity — offline sync queue
-// ─────────────────────────────────────────
 
 @Entity(tableName = "pending_sync")
 data class PendingSync(
@@ -107,9 +85,6 @@ interface PendingSyncDao {
     fun countFlow(): Flow<Int>
 }
 
-// ─────────────────────────────────────────
-//  Database
-// ─────────────────────────────────────────
 
 @Database(
     entities = [CompletedQuest::class, PendingSync::class],

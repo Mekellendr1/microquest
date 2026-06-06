@@ -21,7 +21,7 @@ data class FriendsUiState(
     val feed: List<QuestFeedItem> = emptyList(),
     val leaderboard: List<LeaderboardEntry> = emptyList(),
     val error: String? = null,
-    val message: String? = null   // success snackbar text
+    val message: String? = null
 )
 
 class FriendsViewModel(app: Application) : AndroidViewModel(app) {
@@ -33,7 +33,6 @@ class FriendsViewModel(app: Application) : AndroidViewModel(app) {
 
     init { refresh() }
 
-    // ── Load all data ─────────────────────────────────────────────────────────
 
     fun refresh() {
         viewModelScope.launch {
@@ -54,7 +53,6 @@ class FriendsViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    // ── Send friend request ───────────────────────────────────────────────────
 
     fun addFriend(username: String) {
         if (username.isBlank()) return
@@ -70,7 +68,6 @@ class FriendsViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    // ── Accept / decline incoming request ────────────────────────────────────
 
     fun acceptRequest(friendshipId: String) {
         viewModelScope.launch {
@@ -95,7 +92,7 @@ class FriendsViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    // ── Remove friend ─────────────────────────────────────────────────────────
+
 
     fun removeFriend(friendshipId: String) {
         viewModelScope.launch {
@@ -108,13 +105,11 @@ class FriendsViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    // ── Vote ──────────────────────────────────────────────────────────────────
 
     fun vote(questId: String, approve: Boolean) {
         viewModelScope.launch {
             try {
                 api.vote(VoteRequest(questId, approve))
-                // Update feed locally for instant feedback
                 _state.update { s ->
                     s.copy(feed = s.feed.map { item ->
                         if (item.questId == questId) {
@@ -141,7 +136,6 @@ class FriendsViewModel(app: Application) : AndroidViewModel(app) {
     fun clearMessage() = _state.update { it.copy(message = null) }
     fun clearError()   = _state.update { it.copy(error = null) }
 
-    // ── Error parsing ─────────────────────────────────────────────────────────
 
     private fun parseError(e: Exception): String = when (e) {
         is HttpException -> runCatching {

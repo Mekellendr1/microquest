@@ -29,10 +29,8 @@ class QuestifyMessagingService : FirebaseMessagingService() {
         createNotificationChannel()
     }
 
-    /** Called when a new FCM token is generated (first launch or token refresh). */
     override fun onNewToken(token: String) {
         Log.d("FCM", "New token: $token")
-        // Send to server if user is logged in
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 ApiClient.get(applicationContext).updateFcmToken(FcmTokenRequest(token))
@@ -42,7 +40,6 @@ class QuestifyMessagingService : FirebaseMessagingService() {
         }
     }
 
-    /** Called when a push message is received while app is in foreground. */
     override fun onMessageReceived(message: RemoteMessage) {
         val title = message.notification?.title ?: message.data["title"] ?: return
         val body  = message.notification?.body  ?: message.data["body"]  ?: return

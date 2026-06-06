@@ -66,17 +66,13 @@ import java.util.*
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Ежедневное напоминание в 10:00
         ReminderWorker.schedule(this, hour = 10, minute = 0)
-        // Повторить незавершённые синки при старте
         SyncWorker.enqueue(this)
         setContent { MicroQuestTheme { AppRoot() } }
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  Navigation root
-// ─────────────────────────────────────────────────────────────────────────────
+
 
 @Composable
 fun AppRoot() {
@@ -136,9 +132,6 @@ fun AppRoot() {
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  Main quest screen
-// ─────────────────────────────────────────────────────────────────────────────
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -329,9 +322,6 @@ fun MicroQuestApp(
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  Quest card
-// ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
 fun QuestCard(
@@ -396,9 +386,6 @@ fun QuestCard(
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  Circular timer
-// ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
 fun TimerRing(totalSeconds: Int, remainingSeconds: Int, running: Boolean, color: Color, modifier: Modifier = Modifier) {
@@ -418,9 +405,6 @@ fun TimerRing(totalSeconds: Int, remainingSeconds: Int, running: Boolean, color:
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  All done
-// ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
 fun AllDoneCard(onReset: () -> Unit) {
@@ -434,9 +418,6 @@ fun AllDoneCard(onReset: () -> Unit) {
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  Video player dialog
-// ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
 fun VideoPlayerDialog(uri: Uri, onDismiss: () -> Unit) {
@@ -457,9 +438,6 @@ fun VideoPlayerDialog(uri: Uri, onDismiss: () -> Unit) {
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  History item
-// ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
 fun HistoryItem(item: CompletedQuest, playingUri: Uri?, isPaused: Boolean, onPlayVoice: (Uri) -> Unit, onStopVoice: () -> Unit) {

@@ -39,7 +39,6 @@ fun FriendsScreen(
     var showAddDialog by remember { mutableStateOf(false) }
     var addUsername by remember { mutableStateOf("") }
 
-    // Snackbar for messages
     val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(state.message) {
         state.message?.let { snackbarHostState.showSnackbar(it); vm.clearMessage() }
@@ -76,7 +75,6 @@ fun FriendsScreen(
 
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
 
-            // Tabs
             val requestBadge = state.incomingRequests.size
             ScrollableTabRow(selectedTabIndex = selectedTab, edgePadding = 0.dp) {
                 Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 },
@@ -108,7 +106,6 @@ fun FriendsScreen(
         }
     }
 
-    // Add friend dialog
     if (showAddDialog) {
         AlertDialog(
             onDismissRequest = { showAddDialog = false; addUsername = "" },
@@ -138,7 +135,6 @@ fun FriendsScreen(
     }
 }
 
-// ── Friends list tab ──────────────────────────────────────────────────────────
 
 @Composable
 private fun FriendsTab(friends: List<FriendDto>, onRemove: (String) -> Unit) {
@@ -165,7 +161,6 @@ private fun FriendCard(friend: FriendDto, onRemove: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Avatar
             Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primaryContainer,
                 modifier = Modifier.size(48.dp)) {
                 Box(contentAlignment = Alignment.Center) {
@@ -203,7 +198,6 @@ private fun FriendCard(friend: FriendDto, onRemove: () -> Unit) {
     }
 }
 
-// ── Requests tab ──────────────────────────────────────────────────────────────
 
 @Composable
 private fun RequestsTab(
@@ -256,7 +250,6 @@ private fun RequestsTab(
     }
 }
 
-// ── Feed tab ──────────────────────────────────────────────────────────────────
 
 @Composable
 private fun FeedTab(feed: List<QuestFeedItem>, onVote: (String, Boolean) -> Unit) {
@@ -291,7 +284,6 @@ private fun FeedCard(item: QuestFeedItem, onVote: (String, Boolean) -> Unit) {
     ElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
 
-            // Header
             Row(verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primaryContainer,
@@ -311,7 +303,6 @@ private fun FeedCard(item: QuestFeedItem, onVote: (String, Boolean) -> Unit) {
                 Text(statusLabel, style = MaterialTheme.typography.labelSmall, color = statusColor)
             }
 
-            // Quest
             Surface(
                 shape = RoundedCornerShape(8.dp),
                 color = MaterialTheme.colorScheme.surfaceVariant
@@ -324,7 +315,6 @@ private fun FeedCard(item: QuestFeedItem, onVote: (String, Boolean) -> Unit) {
                 }
             }
 
-            // Proof media (if any)
             if (!item.mediaUrl.isNullOrBlank()) {
                 val baseUrl = ApiClient.BASE_URL.trimEnd('/')
                 AsyncImage(
@@ -338,14 +328,12 @@ private fun FeedCard(item: QuestFeedItem, onVote: (String, Boolean) -> Unit) {
                 )
             }
 
-            // Proof text (if any)
             if (!item.proofText.isNullOrBlank()) {
                 Text("💬 ${item.proofText}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
 
-            // XP badge + vote buttons
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -358,7 +346,6 @@ private fun FeedCard(item: QuestFeedItem, onVote: (String, Boolean) -> Unit) {
 
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp),
                     verticalAlignment = Alignment.CenterVertically) {
-                    // Approve
                     FilledTonalButton(
                         onClick = { onVote(item.questId, true) },
                         colors = ButtonDefaults.filledTonalButtonColors(
@@ -373,7 +360,6 @@ private fun FeedCard(item: QuestFeedItem, onVote: (String, Boolean) -> Unit) {
                                 MaterialTheme.colorScheme.onPrimary
                             else MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    // Reject
                     FilledTonalButton(
                         onClick = { onVote(item.questId, false) },
                         colors = ButtonDefaults.filledTonalButtonColors(
@@ -394,7 +380,6 @@ private fun FeedCard(item: QuestFeedItem, onVote: (String, Boolean) -> Unit) {
     }
 }
 
-// ── Leaderboard tab ───────────────────────────────────────────────────────────
 
 @Composable
 private fun LeaderboardTab(entries: List<LeaderboardEntry>) {
@@ -431,7 +416,6 @@ private fun LeaderboardRow(rank: Int, entry: LeaderboardEntry) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Rank badge
             Box(
                 modifier = Modifier.size(40.dp),
                 contentAlignment = Alignment.Center
@@ -442,7 +426,6 @@ private fun LeaderboardRow(rank: Int, entry: LeaderboardEntry) {
                     color = if (rank > 3) MaterialTheme.colorScheme.onSurfaceVariant else Color.Unspecified)
             }
 
-            // Avatar
             Surface(shape = CircleShape,
                 color = if (entry.isMe) MaterialTheme.colorScheme.primary
                         else MaterialTheme.colorScheme.secondaryContainer,
@@ -479,7 +462,6 @@ private fun LeaderboardRow(rank: Int, entry: LeaderboardEntry) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
 
-            // XP
             Column(horizontalAlignment = Alignment.End) {
                 Text("${entry.xp}", fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.titleMedium,
@@ -491,7 +473,6 @@ private fun LeaderboardRow(rank: Int, entry: LeaderboardEntry) {
     }
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
 
 @Composable
 private fun EmptyState(title: String, subtitle: String) {

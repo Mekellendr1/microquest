@@ -63,7 +63,6 @@ data class AchievementDto(
     val unlockedAt: Long?   // null = locked
 )
 
-// ── Friends ───────────────────────────────────────────────────────────────────
 
 data class FriendDto(
     val friendshipId: String,
@@ -83,7 +82,6 @@ data class FriendRequestDto(
 
 data class AddFriendRequest(val username: String)
 
-// ── Feed / voting ─────────────────────────────────────────────────────────────
 
 data class QuestFeedItem(
     val questId: String,

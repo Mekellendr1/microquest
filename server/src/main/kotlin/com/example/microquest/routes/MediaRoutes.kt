@@ -12,7 +12,6 @@ import java.util.UUID
 
 fun Route.mediaRoutes(mediaDir: File) {
 
-    // ── Upload photo or video (authenticated) ─────────────────────────────────
     authenticate("auth-jwt") {
         post("/upload") {
             val multipart = call.receiveMultipart(formFieldLimit = 52_428_800L) // 50 MB
@@ -44,12 +43,10 @@ fun Route.mediaRoutes(mediaDir: File) {
         }
     }
 
-    // ── Serve uploaded files (public) ─────────────────────────────────────────
     get("/media/{filename}") {
         val filename = call.parameters["filename"]
             ?: return@get call.respond(HttpStatusCode.BadRequest)
 
-        // Basic security: no path traversal
         if ('/' in filename || '\\' in filename || ".." in filename) {
             call.respond(HttpStatusCode.BadRequest); return@get
         }

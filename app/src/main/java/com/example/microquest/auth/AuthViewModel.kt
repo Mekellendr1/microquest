@@ -22,14 +22,13 @@ data class AuthState(
 class AuthViewModel(app: Application) : AndroidViewModel(app) {
 
     private val ctx = app.applicationContext
-    private val api get() = ApiClient.get(ctx)   // always returns current instance after init()
+    private val api get() = ApiClient.get(ctx)
 
     private val _state = MutableStateFlow(AuthState())
     val state: StateFlow<AuthState> = _state.asStateFlow()
 
     init {
         viewModelScope.launch {
-            // Load cached token for OkHttp interceptor (no runBlocking needed)
             ApiClient.loadToken(ctx)
             TokenStore.tokenFlow(ctx).collect { token ->
                 ApiClient.cachedToken = token   // keep interceptor in sync
@@ -38,7 +37,6 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    // ── Auth actions ────────────────────────────────────────────────────────
 
     fun login(email: String, password: String, onSuccess: () -> Unit) {
         if (email.isBlank() || password.isBlank()) {
@@ -91,7 +89,7 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
             try {
                 val user = api.getProfile()
                 _state.update { it.copy(user = user) }
-            } catch (_: Exception) { /* тихо — профиль необязателен */ }
+            } catch (_: Exception) { }
         }
     }
 
@@ -106,7 +104,6 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
 
     fun clearError() = _state.update { it.copy(error = null) }
 
-    // ── Helpers ─────────────────────────────────────────────────────────────
 
     private fun parseError(e: Exception): String = when (e) {
         is HttpException -> {

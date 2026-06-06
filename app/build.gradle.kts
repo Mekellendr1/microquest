@@ -56,22 +56,16 @@ dependencies {
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.media3.exoplayer)
     implementation(libs.media3.ui)
-    // Room
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
-    // Network
     implementation(libs.retrofit)
     implementation(libs.retrofit.gson)
     implementation(libs.okhttp.logging)
-    // DataStore (JWT storage)
     implementation(libs.datastore.preferences)
-    // Navigation
     implementation(libs.navigation.compose)
-    // Firebase
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
-    // WorkManager
     implementation(libs.work.runtime.ktx)
 
     testImplementation(libs.junit)

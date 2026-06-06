@@ -19,7 +19,6 @@ val exposedVersion = "0.57.0"
 val ktorVersion = "3.0.3"
 
 dependencies {
-    // Ktor server
     implementation("io.ktor:ktor-server-core:$ktorVersion")
     implementation("io.ktor:ktor-server-netty:$ktorVersion")
     implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
@@ -29,7 +28,6 @@ dependencies {
     implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
 
-    // Database
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
@@ -37,13 +35,10 @@ dependencies {
     implementation("org.postgresql:postgresql:42.7.4")
     implementation("com.zaxxer:HikariCP:5.1.0")
 
-    // Security
     implementation("at.favre.lib:bcrypt:0.10.2")
 
-    // Logging
     implementation("ch.qos.logback:logback-classic:1.5.12")
 
-    // Firebase Admin SDK (for sending push notifications)
     implementation("com.google.firebase:firebase-admin:9.3.0")
 
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")

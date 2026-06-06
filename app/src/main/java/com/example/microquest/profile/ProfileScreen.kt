@@ -75,7 +75,6 @@ private fun UserProfileContent(user: UserDto, padding: PaddingValues) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
-        // Avatar
         Surface(
             modifier = Modifier.size(88.dp),
             shape = CircleShape,
@@ -96,7 +95,6 @@ private fun UserProfileContent(user: UserDto, padding: PaddingValues) {
             Text("@${user.username}", color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
 
-        // Level card
         ElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(
                 modifier = Modifier.padding(20.dp),
@@ -137,7 +135,6 @@ private fun UserProfileContent(user: UserDto, padding: PaddingValues) {
             }
         }
 
-        // Stats card
         ElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("Статистика", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
@@ -152,7 +149,6 @@ private fun UserProfileContent(user: UserDto, padding: PaddingValues) {
             }
         }
 
-        // XP table hint
         ElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text("Опыт за квесты", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
@@ -163,7 +159,6 @@ private fun UserProfileContent(user: UserDto, padding: PaddingValues) {
             }
         }
 
-        // Achievements — показываем всегда, даже для новых пользователей
         AchievementsCard(user.achievements)
     }
 }
